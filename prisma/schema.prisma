@@ -1,0 +1,461 @@
+// BookMySalon data model.
+//
+// Multi-tenant marketplace: many Salons, each with up to 2 online-bookable
+// Barbers (limit enforced both in the server action and by a DB trigger —
+// see migration SQL). Bookings carry a snapshot of service name/price/duration
+// so historical bookings don't change if a salon edits its services later.
+// Overlap-proof double-booking protection is a Postgres EXCLUDE constraint
+// (see migration SQL), not just application-level checks.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Auth (NextAuth v5 + Credentials) ---
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  phone        String?
+  passwordHash String?
+  image        String?
+  // Platform-wide admin — approves salons, manages the whole marketplace.
+  // Distinct from StaffRole.OWNER, which is scoped to one salon.
+  isSuperAdmin Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  staffMemberships SalonStaff[]
+  bookings         Booking[]
+  reviews          Review[]
+  favouriteSalons  FavouriteSalon[]
+  favouriteBarbers FavouriteBarber[]
+  notifications    Notification[]
+  auditEvents      AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- Salon & staff ---
+
+enum SalonApprovalStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model Salon {
+  id             String              @id @default(cuid())
+  slug           String              @unique
+  name           String
+  description    String?
+  phone          String?
+  email          String?
+  logoUrl        String?
+  coverImageUrl  String?
+  address        String
+  suburb         String
+  state          String
+  postcode       String
+  lat            Float
+  lng            Float
+  // Needed to convert local opening-hours (minutes-from-midnight) to correct
+  // UTC instants, including across DST transitions — AU has multiple zones.
+  timezone       String              @default("Australia/Brisbane")
+  approvalStatus SalonApprovalStatus @default(PENDING_APPROVAL)
+  // Denormalized aggregates, refreshed whenever a Review is created — avoids
+  // an aggregate query on every search-result render.
+  avgRating      Float               @default(0)
+  reviewCount    Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  staff        SalonStaff[]
+  barbers      Barber[]
+  services     Service[]
+  openingHours OpeningHours[]
+  blockedTimes BlockedTime[]
+  bookings     Booking[]
+  reviews      Review[]
+  favouritedBy FavouriteSalon[]
+  subscription SalonSubscription?
+
+  @@index([approvalStatus])
+  @@index([lat, lng])
+}
+
+enum StaffRole {
+  OWNER
+  BARBER
+}
+
+// A user's staff membership at a salon. A BARBER-role row optionally links
+// to the Barber profile they operate as (barberId), so a barber can log in
+// and see only their own schedule — owners link this when inviting a barber
+// to self-manage; barbers created without a login just stay unlinked.
+model SalonStaff {
+  id        String    @id @default(cuid())
+  userId    String
+  salonId   String
+  role      StaffRole
+  barberId  String?   @unique
+  createdAt DateTime  @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon  Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  barber Barber? @relation(fields: [barberId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, salonId])
+  @@index([salonId, role])
+}
+
+// --- Barbers, services ---
+
+model Barber {
+  id             String   @id @default(cuid())
+  salonId        String
+  name           String
+  title          String? // e.g. "Senior Barber"
+  photoUrl       String?
+  bio            String?
+  // Online-bookable barbers are capped at 2 per salon (see SalonSubscription
+  // + the enforcing DB trigger in migration SQL). A salon can still have
+  // additional staff-only barbers with bookableOnline=false who only take
+  // walk-ins, without touching the marketplace cap.
+  bookableOnline Boolean  @default(true)
+  active         Boolean  @default(true)
+  avgRating      Float    @default(0)
+  reviewCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  salon          Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  staffLink      SalonStaff?
+  workingHours   BarberWorkingHours[]
+  breaks         BarberBreak[]
+  barberServices BarberService[]
+  bookings       Booking[]
+  reviews        Review[]
+  blockedTimes   BlockedTime[]
+  favouritedBy   FavouriteBarber[]
+
+  @@index([salonId, bookableOnline])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  salonId         String
+  name            String
+  description     String?
+  priceCents      Int
+  durationMinutes Int
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  salon          Salon           @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  barberServices BarberService[]
+  bookings       Booking[]
+
+  @@index([salonId, active])
+}
+
+// Which barbers offer which services — availability search joins through
+// this to know which barbers are eligible for a chosen service.
+model BarberService {
+  id        String @id @default(cuid())
+  barberId  String
+  serviceId String
+
+  barber  Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([barberId, serviceId])
+}
+
+// --- Availability: opening hours, working hours, breaks, blocked time ---
+
+// Salon-wide opening hours, one row per weekday (0=Sunday..6=Saturday).
+// Times are minutes-from-midnight local to Salon.timezone.
+model OpeningHours {
+  id        String  @id @default(cuid())
+  salonId   String
+  dayOfWeek Int
+  openMin   Int?
+  closeMin  Int?
+  isClosed  Boolean @default(false)
+
+  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([salonId, dayOfWeek])
+}
+
+// Per-barber weekly schedule, one row per weekday.
+model BarberWorkingHours {
+  id        String  @id @default(cuid())
+  barberId  String
+  dayOfWeek Int
+  startMin  Int?
+  endMin    Int?
+  isOff     Boolean @default(false)
+
+  barber Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([barberId, dayOfWeek])
+}
+
+// Recurring weekly break (e.g. lunch 12:30-1:00), one barber can have several.
+model BarberBreak {
+  id        String  @id @default(cuid())
+  barberId  String
+  dayOfWeek Int
+  startMin  Int
+  endMin    Int
+  label     String?
+
+  barber Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, dayOfWeek])
+}
+
+// One-off block of real calendar time: a specific meeting, equipment issue,
+// public holiday (barberId null = whole salon closed), etc. Also covers
+// "Holidays" from the spec — same shape, no separate model needed.
+model BlockedTime {
+  id        String   @id @default(cuid())
+  salonId   String
+  barberId  String?
+  startAt   DateTime
+  endAt     DateTime
+  reason    String
+  createdAt DateTime @default(now())
+
+  salon  Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  barber Barber? @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([salonId, startAt, endAt])
+  @@index([barberId, startAt, endAt])
+}
+
+// --- Bookings ---
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ARRIVED
+  IN_SERVICE
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum BookingSource {
+  ONLINE
+  WALK_IN
+  ADMIN
+}
+
+model Booking {
+  id         String  @id @default(cuid())
+  reference  String  @unique // e.g. "BM-48291", shown to guests
+  salonId    String
+  barberId   String
+  serviceId  String
+  // Null for guest bookings; guest contact is snapshotted below regardless
+  // (customer profiles can change, bookings shouldn't retroactively change).
+  customerId String?
+  guestName  String
+  guestPhone String
+  guestEmail String?
+
+  startAt DateTime
+  endAt   DateTime
+
+  // Snapshotted at booking time so later edits to Service don't rewrite history.
+  serviceNameSnapshot     String
+  priceCentsSnapshot      Int
+  durationMinutesSnapshot Int
+
+  status BookingStatus @default(CONFIRMED)
+  source BookingSource @default(ONLINE)
+
+  checkedInAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  salon    Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  barber   Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service  Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  customer User?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  review   Review?
+
+  @@index([barberId, startAt])
+  @@index([salonId, startAt])
+  @@index([customerId])
+  @@index([status])
+}
+
+// --- Reviews ---
+
+// One review per booking (@@unique below), only ever created for a booking
+// the reviewing customer owns and that is COMPLETED — enforced in the
+// server action, not just here.
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  salonId    String
+  barberId   String
+  customerId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  salon    Salon   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  barber   Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  customer User?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([salonId])
+  @@index([barberId])
+}
+
+// --- Favourites ---
+
+model FavouriteSalon {
+  id        String   @id @default(cuid())
+  userId    String
+  salonId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salon Salon @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, salonId])
+}
+
+model FavouriteBarber {
+  id        String   @id @default(cuid())
+  userId    String
+  barberId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barber Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, barberId])
+}
+
+// --- Notifications (email now; SMS/push/WhatsApp architected for later) ---
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+  WHATSAPP
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  REMINDER
+  CANCELLATION
+  RESCHEDULE
+  REVIEW_REQUEST
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String?
+  bookingId String?
+  channel   NotificationChannel
+  type      NotificationType
+  status    NotificationStatus  @default(PENDING)
+  payload   Json?
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([bookingId])
+}
+
+// --- Subscription plans (not billed yet — just where the online-barber cap lives) ---
+
+model SubscriptionPlan {
+  id               String   @id @default(cuid())
+  name             String   @unique // FREE, BASIC, PRO
+  maxOnlineBarbers Int
+  createdAt        DateTime @default(now())
+
+  salonSubscriptions SalonSubscription[]
+}
+
+model SalonSubscription {
+  id        String   @id @default(cuid())
+  salonId   String   @unique
+  planId    String
+  startedAt DateTime @default(now())
+
+  salon Salon            @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  plan  SubscriptionPlan @relation(fields: [planId], references: [id])
+}
+
+// --- Audit trail ---
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+}
