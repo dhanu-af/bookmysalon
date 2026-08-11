@@ -8,14 +8,14 @@ Build BookMySalon: a HotDoc-style salon/barber booking marketplace (customer sea
 
 **MVP: 100% complete and live**, matching every item on the spec's own MVP checklist (customer search/booking/account, salon owner dashboard, admin approval) — see the "What's built" section below.
 
-**Deferred-items phase: 5 of 6 fully done and verified; 1 needs a manual env var from the user.**
+**Deferred-items phase: 6 of 6 fully done and verified.**
 
 - ✅ Live status indicator (`Salon.runningStatus`) — done, verified live
 - ✅ Queue position for checked-in customers — done, verified live
 - ✅ Billing/subscription architecture (no real charging) — done, verified live
 - ✅ SMS/WhatsApp stub (dev-mode fallback, plan-gated) — done, verified live
 - ✅ Geocoding architecture (Google Maps fallback) — done, verified live
-- ⚠️ **Reminder-email cron — code done, deployed, still NOT actually scheduled.** `vercel.json` has the cron entry and the app is deployed with it, but the route's bearer-token check (`CRON_SECRET`) has NOT been added as a Vercel env var yet. **Confirmed still missing this session** by curling `/api/cron/reminders` both with and without the bearer token — both returned 200, because the route's check is `if (process.env.CRON_SECRET && authHeader !== ...)`, which is a no-op while the env var is unset. This still needs the user to add it manually in the Vercel dashboard (no MCP write tool for env vars exists). See "Next steps" below.
+- ✅ **Reminder-email cron — fully done.** User added `CRON_SECRET` to Vercel manually. Confirmed enforced by curling `/api/cron/reminders`: no-auth and wrong-token requests now correctly 401 (previously both 200, since the route's check `if (process.env.CRON_SECRET && authHeader !== ...)` is a no-op while the env var is unset). **All 6 of the 6 originally-deferred items are now fully done and live.**
 
 **Additionally this session**: added an `/admin/notifications` page (nav item + table) so sent/failed `Notification` rows (email + SMS, any type) are visible in the UI instead of only via server logs/raw DB — this was next-step item #4 from the previous handover. Verified live by logging in as `admin@bookmysalon.test` and confirming real rows render (including three real `RESEND_API_KEY not configured` FAILED rows from earlier testing). Committed as `37664c5` and pushed.
 
@@ -55,13 +55,14 @@ Build BookMySalon: a HotDoc-style salon/barber booking marketplace (customer sea
 
 ## Next steps
 
-1. **Still the only blocker: add `CRON_SECRET` as a Vercel env var** on the `dkns1`/`bookmysalon` project (Settings → Environment Variables, all environments). A generated value was already handed to the user in-chat two sessions ago (`enbO3xnjBf0nff50GedggRaapb1e8cc6`) — reuse that one if she still has it, or generate a fresh one with `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`. No redeploy needed after adding it — Vercel Cron reads env vars at invocation time. Verify it works by hitting `https://bookmysalon-nu.vercel.app/api/cron/reminders` with `Authorization: Bearer <the secret>` and confirming that omitting/wrong-token requests now 401 (right now they still 200, confirmed this session). Once wired up, sent/failed reminders are visible at `/admin/notifications` (added this session).
-2. Set real `RESEND_API_KEY`/`EMAIL_FROM`, `TWILIO_ACCOUNT_SID`/`TWILIO_AUTH_TOKEN`/`TWILIO_FROM_NUMBER`, and `GOOGLE_MAPS_API_KEY` whenever the user is ready to go live with each — all three activate with zero code changes once the env vars exist.
-3. Decide on real billing/Stripe integration before opening the platform to real (non-seed) salon signups — the data model and plan-gating logic are ready, nothing is connected to a real payment processor.
+All deferred-features work is done. What's left is explicitly **on hold per the user's direct instruction** ("hold to phase 2") — do not chase these proactively, only act if she raises them again:
+
+1. Setting real `RESEND_API_KEY`/`EMAIL_FROM`, `TWILIO_ACCOUNT_SID`/`TWILIO_AUTH_TOKEN`/`TWILIO_FROM_NUMBER`, and `GOOGLE_MAPS_API_KEY` — all three architectures already activate with zero code changes once the env vars exist; there's nothing further to build here without real credentials.
+2. Deciding on real billing/Stripe integration before opening the platform to real (non-seed) salon signups — the data model and plan-gating logic are ready, nothing is connected to a real payment processor.
 
 ## Open questions
 
-- None blocking — the one clearly-outstanding item (CRON_SECRET) just needs the user to paste a value into her Vercel dashboard, which Claude cannot do directly (no MCP tool for it, and the CLI can't reach that account).
+- None. Both remaining items are deliberately deferred to a later phase per the user, not blocked on anything Claude needs to resolve.
 
 ---
 
