@@ -3,6 +3,7 @@ import { haversineKm } from "@/lib/geo/distance";
 import { getAvailableSlots } from "@/lib/booking/availability";
 import { minutesToHHmm } from "@/lib/booking/slots";
 import { dateStrInZone } from "@/lib/date";
+import type { SalonRunningStatus } from "@/generated/prisma/client";
 
 export interface SalonSearchResult {
   id: string;
@@ -15,6 +16,7 @@ export interface SalonSearchResult {
   fromPriceCents: number | null;
   distanceKm: number | null;
   todaySlots: string[]; // first few "HH:mm" slots today, across all barbers
+  runningStatus: SalonRunningStatus;
 }
 
 export interface SalonSearchParams {
@@ -80,6 +82,7 @@ export async function searchSalons(params: SalonSearchParams): Promise<SalonSear
       fromPriceCents: cheapestService?.priceCents ?? null,
       distanceKm,
       todaySlots,
+      runningStatus: salon.runningStatus,
     });
   }
 

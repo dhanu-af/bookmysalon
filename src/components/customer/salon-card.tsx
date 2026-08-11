@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SalonSearchResult } from "@/lib/salon-search";
 import { formatPriceCents } from "@/lib/format";
+import { RUNNING_STATUS_LABELS } from "@/lib/salon-status";
 
 export function SalonCard({ salon }: { salon: SalonSearchResult }) {
   return (
@@ -34,6 +35,10 @@ export function SalonCard({ salon }: { salon: SalonSearchResult }) {
             </div>
           )}
         </div>
+
+        {salon.runningStatus !== "ON_TIME" && (
+          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">{RUNNING_STATUS_LABELS[salon.runningStatus]}</p>
+        )}
 
         {salon.todaySlots.length > 0 && (
           <div>

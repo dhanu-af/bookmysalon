@@ -1,11 +1,18 @@
 import { requireUser } from "@/lib/session";
 import { getMyBookings } from "@/lib/booking/my-bookings";
+import { getQueuePosition } from "@/lib/booking/queue-position";
 import { BookingRow } from "@/components/customer/booking-row";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function MyBookingsPage() {
   const user = await requireUser();
   const { upcoming, past, cancelled } = await getMyBookings(user.id);
+
+  const queuePositions = Object.fromEntries(
+    await Promise.all(
+      upcoming.filter((b) => b.status === "ARRIVED").map(async (b) => [b.id, await getQueuePosition(b.id)] as const)
+    )
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -19,7 +26,7 @@ export default async function MyBookingsPage() {
         <TabsContent value="upcoming" className="mt-4 space-y-3">
           {upcoming.length === 0 && <EmptyState label="No upcoming bookings" />}
           {upcoming.map((b) => (
-            <BookingRow key={b.id} booking={b} tab="upcoming" />
+            <BookingRow key={b.id} booking={b} tab="upcoming" queuePosition={queuePositions[b.id] ?? null} />
           ))}
         </TabsContent>
         <TabsContent value="past" className="mt-4 space-y-3">

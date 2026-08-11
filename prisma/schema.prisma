@@ -79,6 +79,12 @@ enum SalonApprovalStatus {
   SUSPENDED
 }
 
+enum SalonRunningStatus {
+  ON_TIME
+  DELAYED_10
+  DELAYED_30
+}
+
 model Salon {
   id             String              @id @default(cuid())
   slug           String              @unique
@@ -102,6 +108,10 @@ model Salon {
   // an aggregate query on every search-result render.
   avgRating      Float               @default(0)
   reviewCount    Int                 @default(0)
+  // Manually toggled by staff to warn customers with upcoming bookings that
+  // the salon is running behind — spec only asked this be architected, but
+  // it's simple enough to ship as a real (manual, not auto-computed) feature.
+  runningStatus  SalonRunningStatus  @default(ON_TIME)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 

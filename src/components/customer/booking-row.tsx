@@ -25,7 +25,15 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   NO_SHOW: "destructive",
 };
 
-export function BookingRow({ booking, tab }: { booking: Booking; tab: "upcoming" | "past" | "cancelled" }) {
+export function BookingRow({
+  booking,
+  tab,
+  queuePosition,
+}: {
+  booking: Booking;
+  tab: "upcoming" | "past" | "cancelled";
+  queuePosition?: number | null;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -58,6 +66,11 @@ export function BookingRow({ booking, tab }: { booking: Booking; tab: "upcoming"
             {formatPriceCents(booking.priceCentsSnapshot)}
           </p>
           <p className="text-xs text-muted-foreground">Ref: {booking.reference}</p>
+          {booking.status === "ARRIVED" && queuePosition != null && (
+            <p className="mt-1 text-sm font-medium text-amber-700 dark:text-amber-400">
+              {queuePosition === 1 ? "You're next!" : `Position in queue: ${queuePosition}`}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">

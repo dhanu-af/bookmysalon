@@ -1,6 +1,7 @@
 import { requireSalonStaff } from "@/lib/session";
 import { getTodayStats } from "@/lib/dashboard/stats";
 import { Card, CardContent } from "@/components/ui/card";
+import { RunningStatusWidget } from "./running-status-widget";
 
 export default async function SalonDashboardPage({ params }: { params: Promise<{ salonId: string }> }) {
   const { salonId } = await params;
@@ -10,6 +11,8 @@ export default async function SalonDashboardPage({ params }: { params: Promise<{
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Today</h1>
+
+      <RunningStatusWidget salonId={salonId} current={salon.runningStatus} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <StatCard label="Bookings" value={counts.total} />

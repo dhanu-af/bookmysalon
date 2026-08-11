@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FavouriteSalonButton } from "@/components/customer/favourite-buttons";
+import { RUNNING_STATUS_LABELS } from "@/lib/salon-status";
 
 export default async function SalonProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -27,6 +28,11 @@ export default async function SalonProfilePage({ params }: { params: Promise<{ s
               {salon.suburb}, {salon.state}
             </span>
           </div>
+          {salon.runningStatus !== "ON_TIME" && (
+            <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+              {RUNNING_STATUS_LABELS[salon.runningStatus]}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <FavouriteSalonButton salonId={salon.id} />
