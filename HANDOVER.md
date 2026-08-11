@@ -1,4 +1,4 @@
-# Handover — 2026-08-11 21:15
+# Handover — 2026-08-11 21:40
 
 ## Goal
 
@@ -15,9 +15,11 @@ Build BookMySalon: a HotDoc-style salon/barber booking marketplace (customer sea
 - ✅ Billing/subscription architecture (no real charging) — done, verified live
 - ✅ SMS/WhatsApp stub (dev-mode fallback, plan-gated) — done, verified live
 - ✅ Geocoding architecture (Google Maps fallback) — done, verified live
-- ⚠️ **Reminder-email cron — code done, deployed, but NOT actually scheduled yet.** `vercel.json` has the cron entry and the app is deployed with it, but the route's bearer-token check (`CRON_SECRET`) has NOT been added as a Vercel env var yet — this was the last thing in progress when the session ended. See "Next steps" below; it's a 2-minute task.
+- ⚠️ **Reminder-email cron — code done, deployed, still NOT actually scheduled.** `vercel.json` has the cron entry and the app is deployed with it, but the route's bearer-token check (`CRON_SECRET`) has NOT been added as a Vercel env var yet. **Confirmed still missing this session** by curling `/api/cron/reminders` both with and without the bearer token — both returned 200, because the route's check is `if (process.env.CRON_SECRET && authHeader !== ...)`, which is a no-op while the env var is unset. This still needs the user to add it manually in the Vercel dashboard (no MCP write tool for env vars exists). See "Next steps" below.
 
-**Deployment**: everything is pushed to `main` on GitHub (`dhanu-af/bookmysalon`) and auto-deploys to the correct Vercel project. Latest deploy (`dpl_GfiNhi96mJUBZPvEU9peKDpbYDpM`, commit `e4d59fc`) is `READY` and live at **https://bookmysalon-nu.vercel.app**. Local dev DB and production DB are both migrated to the latest schema and seeded.
+**Additionally this session**: added an `/admin/notifications` page (nav item + table) so sent/failed `Notification` rows (email + SMS, any type) are visible in the UI instead of only via server logs/raw DB — this was next-step item #4 from the previous handover. Verified live by logging in as `admin@bookmysalon.test` and confirming real rows render (including three real `RESEND_API_KEY not configured` FAILED rows from earlier testing). Committed as `37664c5` and pushed.
+
+**Deployment**: everything is pushed to `main` on GitHub (`dhanu-af/bookmysalon`) and auto-deploys to the correct Vercel project. Latest deploy before this session's commit was `dpl_2oCaK46VNYmCkL6JLkht58KwV6u9` (`READY`, production) at **https://bookmysalon-nu.vercel.app**; commit `37664c5` will auto-deploy next. Local dev DB and production DB are both migrated to the latest schema and seeded.
 
 ## Key decisions
 
@@ -53,10 +55,9 @@ Build BookMySalon: a HotDoc-style salon/barber booking marketplace (customer sea
 
 ## Next steps
 
-1. **Finish task #13 (reminder-email cron)** — add `CRON_SECRET` as a Vercel env var on the `dkns1`/`bookmysalon` project (Settings → Environment Variables, all environments). A generated value was already handed to the user in-chat during this session (`enbO3xnjBf0nff50GedggRaapb1e8cc6`) — reuse that one if she still has it, or generate a fresh one with `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`. No redeploy needed after adding it — Vercel Cron reads env vars at invocation time. Verify it works by manually hitting `https://bookmysalon-nu.vercel.app/api/cron/reminders` with `Authorization: Bearer <the secret>` and confirming a 200 (not 401), or wait for the next 9am UTC scheduled run and check `/admin` → look for new `REMINDER`-type `Notification` rows (no admin UI surfaces these yet — would need a raw DB check or a small addition to the admin dashboard).
+1. **Still the only blocker: add `CRON_SECRET` as a Vercel env var** on the `dkns1`/`bookmysalon` project (Settings → Environment Variables, all environments). A generated value was already handed to the user in-chat two sessions ago (`enbO3xnjBf0nff50GedggRaapb1e8cc6`) — reuse that one if she still has it, or generate a fresh one with `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`. No redeploy needed after adding it — Vercel Cron reads env vars at invocation time. Verify it works by hitting `https://bookmysalon-nu.vercel.app/api/cron/reminders` with `Authorization: Bearer <the secret>` and confirming that omitting/wrong-token requests now 401 (right now they still 200, confirmed this session). Once wired up, sent/failed reminders are visible at `/admin/notifications` (added this session).
 2. Set real `RESEND_API_KEY`/`EMAIL_FROM`, `TWILIO_ACCOUNT_SID`/`TWILIO_AUTH_TOKEN`/`TWILIO_FROM_NUMBER`, and `GOOGLE_MAPS_API_KEY` whenever the user is ready to go live with each — all three activate with zero code changes once the env vars exist.
 3. Decide on real billing/Stripe integration before opening the platform to real (non-seed) salon signups — the data model and plan-gating logic are ready, nothing is connected to a real payment processor.
-4. Consider surfacing `Notification` rows (all channels/types) somewhere in the admin dashboard for visibility — currently there's no UI to see sent/failed notifications, only server logs and the DB table itself.
 
 ## Open questions
 
