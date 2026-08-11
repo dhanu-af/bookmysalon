@@ -7,6 +7,7 @@ import { getAvailableSlots } from "./availability";
 import { generateUniqueReference } from "./reference";
 import { isExclusionViolation } from "./exclusion-error";
 import { sendBookingConfirmationEmail } from "@/lib/notifications/booking-emails";
+import { sendBookingConfirmationSms } from "@/lib/notifications/booking-sms";
 
 export interface CreateBookingInput {
   salonId: string;
@@ -76,6 +77,8 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       // row (status FAILED) for later inspection, not surfaced to the customer.
       sendBookingConfirmationEmail(booking.id).catch((e) => console.error("Failed to send booking confirmation email", e));
     }
+    // No-ops (logged) unless the salon's plan has smsEnabled — see booking-sms.ts.
+    sendBookingConfirmationSms(booking.id).catch((e) => console.error("Failed to send booking confirmation SMS", e));
     return { booking };
   } catch (e) {
     if (isExclusionViolation(e)) {

@@ -33,10 +33,8 @@ export function RegisterSalonForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!coords) {
-      toast.error("Please set your salon's location");
-      return;
-    }
+    // No coords? The server falls back to geocoding the typed address —
+    // only errors out if that's also unavailable (no API key configured yet).
     setSubmitting(true);
     const result = await registerSalon({
       ownerName,
@@ -48,8 +46,8 @@ export function RegisterSalonForm() {
       suburb,
       state,
       postcode,
-      lat: coords.lat,
-      lng: coords.lng,
+      lat: coords?.lat,
+      lng: coords?.lng,
     });
     if ("error" in result) {
       toast.error(result.error);
@@ -80,7 +78,7 @@ export function RegisterSalonForm() {
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={useMyLocation} className="gap-2">
           <LocateFixed className="size-4" />
-          {coords ? "Location set" : "Use my current location"}
+          {coords ? "Location set" : "Use my current location (optional)"}
         </Button>
         {coords && <span className="text-xs text-muted-foreground">{coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}</span>}
       </div>

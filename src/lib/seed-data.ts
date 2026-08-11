@@ -1,4 +1,3 @@
-import "server-only";
 import bcrypt from "bcryptjs";
 import type { PrismaClient } from "@/generated/prisma/client";
 
@@ -95,11 +94,14 @@ const SALONS: SalonSeed[] = [
 export async function seedDemoData(prisma: PrismaClient) {
   const log: string[] = [];
 
-  async function upsertPlan(name: string, maxOnlineBarbers: number) {
+  async function upsertPlan(
+    name: string,
+    input: { maxOnlineBarbers: number; priceCentsMonthly: number; smsEnabled: boolean; advancedAnalytics: boolean }
+  ) {
     return prisma.subscriptionPlan.upsert({
       where: { name },
-      update: { maxOnlineBarbers },
-      create: { name, maxOnlineBarbers },
+      update: input,
+      create: { name, ...input },
     });
   }
 
@@ -113,9 +115,14 @@ export async function seedDemoData(prisma: PrismaClient) {
   }
 
   log.push("Seeding subscription plans...");
-  await upsertPlan("FREE", 1);
-  const basicPlan = await upsertPlan("BASIC", 2);
-  await upsertPlan("PRO", 10);
+  await upsertPlan("FREE", { maxOnlineBarbers: 1, priceCentsMonthly: 0, smsEnabled: false, advancedAnalytics: false });
+  const basicPlan = await upsertPlan("BASIC", {
+    maxOnlineBarbers: 2,
+    priceCentsMonthly: 2900,
+    smsEnabled: false,
+    advancedAnalytics: false,
+  });
+  await upsertPlan("PRO", { maxOnlineBarbers: 10, priceCentsMonthly: 7900, smsEnabled: true, advancedAnalytics: true });
 
   log.push("Seeding super admin...");
   await upsertUser("admin@bookmysalon.test", "Platform Admin", "password123", true);

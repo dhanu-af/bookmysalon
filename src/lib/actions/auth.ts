@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { slugify } from "@/lib/slugify";
+import { geocodeAddress } from "@/lib/geo/geocode";
 
 const registerCustomerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -43,8 +44,12 @@ const registerSalonSchema = z.object({
   suburb: z.string().min(1, "Suburb is required"),
   state: z.string().min(1, "State is required"),
   postcode: z.string().min(1, "Postcode is required"),
-  lat: z.number(),
-  lng: z.number(),
+  // Optional client-side geolocation — if omitted, falls back to
+  // geocodeAddress() from the typed address (only works once
+  // GOOGLE_MAPS_API_KEY is configured; otherwise this errors out asking
+  // the owner to share their location instead).
+  lat: z.number().optional(),
+  lng: z.number().optional(),
 });
 
 /**
@@ -61,6 +66,14 @@ export async function registerSalon(input: z.infer<typeof registerSalonSchema>) 
 
   const existingUser = await db.user.findUnique({ where: { email: data.ownerEmail } });
   if (existingUser) return { error: "An account with this email already exists" };
+
+  let { lat, lng } = data;
+  if (lat == null || lng == null) {
+    const geocoded = await geocodeAddress(data);
+    if (!geocoded) return { error: "Couldn't determine your salon's location — please share your location instead" };
+    lat = geocoded.lat;
+    lng = geocoded.lng;
+  }
 
   const passwordHash = await hashPassword(data.password);
   const slug = await uniqueSlug(data.salonName);
@@ -85,8 +98,8 @@ export async function registerSalon(input: z.infer<typeof registerSalonSchema>) 
         suburb: data.suburb,
         state: data.state,
         postcode: data.postcode,
-        lat: data.lat,
-        lng: data.lng,
+        lat,
+        lng,
         email: data.ownerEmail,
         approvalStatus: "PENDING_APPROVAL",
       },

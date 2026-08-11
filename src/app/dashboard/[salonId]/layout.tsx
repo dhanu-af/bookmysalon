@@ -11,6 +11,7 @@ const OWNER_NAV = [
   { href: "/profile", label: "Salon Profile" },
   { href: "/hours", label: "Opening Hours" },
   { href: "/blocked-times", label: "Blocked Times" },
+  { href: "/settings", label: "Settings" },
 ];
 
 const BARBER_NAV = [
