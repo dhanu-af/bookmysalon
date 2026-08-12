@@ -16,11 +16,13 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 
 **Site-wide premium redesign**: done, live, verified end-to-end in-browser. What started as "redesign the homepage from my Figma" (previous session) then "same premium look for my account pages" then finally **"I need all of inside same as premium look"** — she wanted the Fraunces/Outfit + cream/maroon design applied everywhere, not just the homepage. Extended it to: `SiteHeader` (desktop/mobile top bars + mobile bottom nav, maroon "B" logo badge), `/search` + `SearchFilters` + `SalonCard`, salon profile page, barber profile page, the full 6-step booking wizard, the booking confirmation page, and login/register/register-salon (including the `(auth)` layout and the standalone `/register/salon` page, which had no shared layout at all before). `MarketingLayout` and the `(auth)` layout now set the shared cream background + Outfit font once, rather than every page repeating it. This **resolves** the "should the header match" open question from the previous handover — it now does, everywhere.
 
-**Explicitly on hold per the user ("hold to phase 2"), do not chase proactively:**
-- Real `RESEND_API_KEY` / Twilio creds / `GOOGLE_MAPS_API_KEY` — architecture is done, these are pure env-var flips whenever she's ready.
+**Admin-alert emails on new signups**: done, live, verified in-browser. Every current super admin now gets an email (+ an `ADMIN_ALERT` `Notification` row) the moment a customer or salon owner self-registers and lands `PENDING` — see [`src/lib/notifications/admin-alerts.ts`](src/lib/notifications/admin-alerts.ts), `notifyAdminsOfPendingUser()`. **Phase 2 (real credentials) appears to be starting**: the user was mid-way through Resend's onboarding flow (logged in as `hellodkns@gmail.com`) when she asked for this — she hasn't handed over a `RESEND_API_KEY` yet, but once she finishes there and adds the key to Vercel (same "user must add it, Claude can't write env vars" constraint as `CRON_SECRET` earlier), this admin-alert email — and booking confirmations — will start actually sending instead of console-logging, with zero code changes.
+
+**Explicitly on hold per the user ("hold to phase 2") — Resend may now be actively in progress, see above, but Twilio/Google Maps/Stripe are still untouched:**
+- Twilio creds / `GOOGLE_MAPS_API_KEY` — architecture is done, these are pure env-var flips whenever she's ready.
 - Real Stripe/billing integration — data model + plan-gating logic exist, nothing is connected to a real processor.
 
-**Deployment**: pushed to `main` on GitHub (`dhanu-af/bookmysalon`), auto-deploys to Vercel team `dkns1`. Latest deploy `dpl_7Zq8kpnyRtZL2g3bfJqaw6kfWbs3` (commit `e58369c`, the site-wide redesign) confirmed `READY` in production at **https://bookmysalon-nu.vercel.app**.
+**Deployment**: pushed to `main` on GitHub (`dhanu-af/bookmysalon`), auto-deploys to Vercel team `dkns1`. Latest deploy `dpl_EEYS5j8nktF8aHmRcz3S86crssv1` (commit `1edcfcc`, the admin-alert email feature) confirmed `READY` in production at **https://bookmysalon-nu.vercel.app**.
 
 ## Key decisions
 
@@ -62,7 +64,8 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 - [`src/app/(marketing)/layout.tsx`](src/app/(marketing)/layout.tsx), [`src/app/(auth)/layout.tsx`](src/app/(auth)/layout.tsx) — now set cream bg + Outfit font once, shared by every page underneath. Done.
 - [`src/app/(auth)/login/page.tsx`](src/app/(auth)/login/page.tsx) + `login-form.tsx`, [`src/app/(auth)/register/page.tsx`](src/app/(auth)/register/page.tsx) + `register-form.tsx`, [`src/app/register/salon/page.tsx`](src/app/register/salon/page.tsx) + `register-salon-form.tsx` — restyled (the last one also gained a logo/header, since it previously had none). Done.
 - [`src/components/customer/reschedule-dialog.tsx`](src/components/customer/reschedule-dialog.tsx), [`review-dialog.tsx`](src/components/customer/review-dialog.tsx), [`favourite-buttons.tsx`](src/components/customer/favourite-buttons.tsx) — lighter pass (title font, button/slot colors), not a full rebuild. Done.
-- Commits this session: `4c3defe`, `95c84c2` (homepage rebuild), `69f7f99`, `539e9f6` (approval workflow + admin management), `58c2add`, `9b4b79e` (account-area redesign), `e58369c` (site-wide redesign). All pushed and deployed `READY`.
+- [`prisma/schema.prisma`](prisma/schema.prisma) (`NotificationType.ADMIN_ALERT`) + its migration, [`src/lib/notifications/admin-alerts.ts`](src/lib/notifications/admin-alerts.ts) (new, `notifyAdminsOfPendingUser`), [`src/lib/actions/auth.ts`](src/lib/actions/auth.ts) (fire-and-forget call from both `registerCustomer` and `registerSalon`) — admin-alert emails. Done.
+- Commits this session: `4c3defe`, `95c84c2` (homepage rebuild), `69f7f99`, `539e9f6` (approval workflow + admin management), `58c2add`, `9b4b79e` (account-area redesign), `e58369c` (site-wide redesign), `c480ee4`, `1edcfcc` (admin-alert emails). All pushed and deployed `READY`.
 
 ## Gotchas / constraints learned
 
@@ -74,9 +77,10 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 
 ## Next steps
 
-1. Only the `/admin` and `/dashboard` routes (salon-owner/staff and platform-admin tooling) still use the original plain shadcn look — not restyled, since scope so far has been "everywhere a *customer* sees the app." If she says "all of inside" again pointing at one of those, that's the next surface.
-2. Consider whether the seeded demo `admin@bookmysalon.test` account should eventually be removed/deactivated now that she has her own real super admin (`khdanushka2024@gmail.com`) — not done, not asked for, just worth raising.
-3. Real credentials (Resend/Twilio/Google Maps) and Stripe billing remain on hold per her explicit instruction — don't start on these without her prompting it again.
+1. **If she comes back with a real `RESEND_API_KEY`** (she was mid-Resend-onboarding as this was written), the only remaining step is her adding it to Vercel's env vars herself (Settings → Environment Variables) — no code change needed, admin-alert emails and booking confirmations both activate immediately. Also set `EMAIL_FROM` to a real verified sender address at the same time if Resend requires domain verification (check `src/lib/notifications/email.ts`'s `FROM_ADDRESS` fallback).
+2. Only the `/admin` and `/dashboard` routes (salon-owner/staff and platform-admin tooling) still use the original plain shadcn look — not restyled, since scope so far has been "everywhere a *customer* sees the app." If she says "all of inside" again pointing at one of those, that's the next surface.
+3. Consider whether the seeded demo `admin@bookmysalon.test` account should eventually be removed/deactivated now that she has her own real super admin (`khdanushka2024@gmail.com`) — not done, not asked for, just worth raising.
+4. Twilio/Google Maps credentials and Stripe billing remain on hold per her explicit instruction — don't start on these without her prompting it again.
 
 ## Open questions
 
