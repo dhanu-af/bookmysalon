@@ -12,11 +12,13 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 
 **Homepage rebuilt from the user's Figma Make design**: done, live, verified in-browser. See "Key decisions" for how — this was a bigger effort than it sounds because of Figma access friction.
 
+**Account approval workflow + super-admin management**: done, live, verified end-to-end in-browser (register → blocked login → admin approve → login succeeds; and admin creates a new super admin). Self-service signups (customer via `/register`, salon owner via `/register/salon`) now create the `User` as `PENDING` and can't sign in until a super admin approves them at `/admin/approvals` — separate from and in addition to the salon's own listing-approval gate that already existed. `/admin/admins` lets an existing super admin create another one. **The user still needs to actually create her own super admin account** — log in as the seeded `admin@bookmysalon.test` / `password123`, go to `/admin/admins`, and create `khdanushka@gmail.com` with whatever password she wants (Claude deliberately did not choose a password for her real email).
+
 **Explicitly on hold per the user ("hold to phase 2"), do not chase proactively:**
 - Real `RESEND_API_KEY` / Twilio creds / `GOOGLE_MAPS_API_KEY` — architecture is done, these are pure env-var flips whenever she's ready.
 - Real Stripe/billing integration — data model + plan-gating logic exist, nothing is connected to a real processor.
 
-**Deployment**: pushed to `main` on GitHub (`dhanu-af/bookmysalon`), auto-deploys to Vercel team `dkns1`. Latest deploy `dpl_8rbtxyrdWyYHq8nn2EuHkpVX1mL7` (commit `95c84c2`) is `READY` in production at **https://bookmysalon-nu.vercel.app** — confirmed serving the new homepage (`curl` returns 200 and the new "Skip the / Queue." headline).
+**Deployment**: pushed to `main` on GitHub (`dhanu-af/bookmysalon`), auto-deploys to Vercel team `dkns1`. Latest deploy `dpl_72HWftxh93KY9yg6AMog1ajhU6tG` (commit `539e9f6`) is `READY` in production at **https://bookmysalon-nu.vercel.app** — the `add_user_approval_status` migration ran cleanly as part of `vercel-build` (`prisma migrate deploy`), and `/admin/approvals` + `/admin/admins` both correctly 307-redirect to `/login` when hit unauthenticated.
 
 ## Key decisions
 
@@ -26,6 +28,9 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 - **Testimonials fall back to the design's sample quotes** because `getTestimonials()` (real 5-star reviews with a comment) returns empty — no seed data creates reviews. If real reviews get created later, they'll automatically replace the fallback.
 - **Dropped the Figma design's 4th hero search field ("Time")** — there's no time-of-day filter in `searchSalons`/`getAvailableSlots`, and adding one wasn't asked for. Kept the 3 real fields (Service/Location/Date) with real routing to `/search`.
 - **Deleted `src/components/customer/search-form.tsx` and `nearby-salons.tsx`** — both were only ever called by the old homepage, now dead code after the rewrite.
+- **The approval gate blocks sign-in, not just visibility** — a salon owner registering via `/register/salon` previously got auto-signed-in and redirected straight to their dashboard while the *salon* awaited approval. Now their *account* also needs approval first, so that redirect/auto-sign-in was removed too (replaced with a "submitted, pending approval" message). This is a deliberate behavior change per the user's literal request ("anyone who needs to create a new user account or salon owner account, Dhanu needs to approve"), not an oversight — flag it to her if she's surprised owners can no longer self-serve into their dashboard immediately.
+- **`isSuperAdmin` accounts always bypass the approval check** in `auth.ts`'s `authorize()`, and the schema-level default for `User.approvalStatus` is `APPROVED` (not `PENDING`) — only the two public registration actions explicitly override it to `PENDING`. This meant the migration needed no backfill: every existing seeded/staff/admin account automatically became `APPROVED` for free.
+- **Auth.js v5's `signIn()` client function exposes a custom `CredentialsSignin` subclass's `code` as `result.code`, not folded into `result.error`** (confirmed by inspecting `node_modules/next-auth/react.js` — `result.error` is always the string `"CredentialsSignin"`; `code` is parsed separately from the `?code=` redirect param). Check `result.code`, not `result.error`, to distinguish custom credential-error reasons (used here for `"account_pending"` / `"account_rejected"`).
 
 ## Files touched
 
@@ -34,7 +39,15 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 - [`src/app/(marketing)/_home/homepage-data.ts`](src/app/(marketing)/_home/homepage-data.ts) — new data queries: `getTopSalons`, `getRightNowCards`, `getTopBarbers`, `getTestimonials`. Done.
 - [`src/app/admin/notifications/page.tsx`](src/app/admin/notifications/page.tsx) + [`src/app/admin/layout.tsx`](src/app/admin/layout.tsx) (nav link) — new admin notifications visibility page. Done, from earlier in this session.
 - Deleted: `src/components/customer/search-form.tsx`, `src/components/customer/nearby-salons.tsx`.
-- Commits this session: `4c3defe` (handover update), `95c84c2` (homepage rebuild). Both pushed and deployed READY.
+- [`prisma/schema.prisma`](prisma/schema.prisma) + [`prisma/migrations/20260812071633_add_user_approval_status/`](prisma/migrations/20260812071633_add_user_approval_status/migration.sql) — new `UserApprovalStatus` enum + `User.approvalStatus` field. Done, migrated locally and in production.
+- [`src/auth.ts`](src/auth.ts) — `authorize()` now throws `AccountPendingError`/`AccountRejectedError` (both exported) for non-approved, non-admin accounts. Done.
+- [`src/lib/actions/auth.ts`](src/lib/actions/auth.ts) — `registerCustomer`/`registerSalon` create `PENDING` accounts. Done.
+- [`src/lib/actions/admin.ts`](src/lib/actions/admin.ts) — new `approveUser`, `rejectUser`, `createSuperAdmin`. Done.
+- [`src/app/admin/approvals/page.tsx`](src/app/admin/approvals/page.tsx) + `user-approval-actions.tsx` — new page, lists pending users + pending salons. Done.
+- [`src/app/admin/admins/page.tsx`](src/app/admin/admins/page.tsx) + `create-admin-form.tsx` — new page, create-super-admin form + list. Done.
+- [`src/app/(auth)/register/register-form.tsx`](src/app/(auth)/register/register-form.tsx), [`src/app/register/salon/register-salon-form.tsx`](src/app/register/salon/register-salon-form.tsx), [`src/app/(auth)/login/login-form.tsx`](src/app/(auth)/login/login-form.tsx) — no more auto-sign-in after registration; login shows a specific pending/rejected message. Done.
+- [`src/app/admin/layout.tsx`](src/app/admin/layout.tsx) — added "Approvals" and "Admins" nav links. Done.
+- Commits this session: `4c3defe` (handover update), `95c84c2` (homepage rebuild), `69f7f99` (handover rewrite), `539e9f6` (approval workflow + admin management). All pushed and deployed READY.
 
 ## Gotchas / constraints learned
 
@@ -46,11 +59,12 @@ Build and iteratively improve BookMySalon: a HotDoc-style salon/barber booking m
 
 ## Next steps
 
-Nothing is blocking. Two optional follow-ups exist only if the user asks:
-
-1. If she wants the new cream/maroon Figma visual identity applied to the **site-wide header and footer** (not just the homepage), that requires touching `SiteHeader` and `MarketingLayout` — deliberately not done this session per "without change site."
-2. Real credentials (Resend/Twilio/Google Maps) and Stripe billing remain on hold per her explicit instruction — don't start on these without her prompting it again.
+1. **The user needs to create her own real super admin account** — log in as `admin@bookmysalon.test` / `password123`, go to `/admin/admins`, create `khdanushka@gmail.com` with a password of her choosing. Claude built the feature but deliberately didn't invent a password for her real email.
+2. Consider whether the seeded demo `admin@bookmysalon.test` account should eventually be removed/deactivated once she has her own real super admin — not done, not asked for, just worth raising once she's set up her own account.
+3. If she wants the new cream/maroon Figma visual identity applied to the **site-wide header and footer** (not just the homepage), that requires touching `SiteHeader` and `MarketingLayout` — deliberately not done per "without change site."
+4. Real credentials (Resend/Twilio/Google Maps) and Stripe billing remain on hold per her explicit instruction — don't start on these without her prompting it again.
 
 ## Open questions
 
-- Does she want the site-wide header/footer restyled to match the new homepage's look, or is the plain existing header intentional/fine for the rest of the site? Not asked this session — the homepage was scoped conservatively to avoid overstepping "without change site," but it does mean the homepage's hero now sits under a header that doesn't visually match the new design below it.
+- Does she want the site-wide header/footer restyled to match the new homepage's look, or is the plain existing header intentional/fine for the rest of the site? Not asked — the homepage was scoped conservatively to avoid overstepping "without change site."
+- Is requiring approval for *every* customer signup (not just salon owners) actually the long-term intent, or was that meant more loosely? Implemented literally per her wording ("anyone who needs to create a new user account... Dhanu needs to approve"), but a consumer marketplace gating every single customer signup behind manual review is unusual and won't scale past a handful of signups a day — worth confirming with her once she's using it for real.
