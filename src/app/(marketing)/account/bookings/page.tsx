@@ -3,6 +3,7 @@ import { getMyBookings } from "@/lib/booking/my-bookings";
 import { getQueuePosition } from "@/lib/booking/queue-position";
 import { BookingRow } from "@/components/customer/booking-row";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fraunces, outfit } from "@/lib/fonts";
 
 export default async function MyBookingsPage() {
   const user = await requireUser();
@@ -15,37 +16,45 @@ export default async function MyBookingsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">My Bookings</h1>
-      <Tabs defaultValue="upcoming">
-        <TabsList>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled ({cancelled.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming" className="mt-4 space-y-3">
-          {upcoming.length === 0 && <EmptyState label="No upcoming bookings" />}
-          {upcoming.map((b) => (
-            <BookingRow key={b.id} booking={b} tab="upcoming" queuePosition={queuePositions[b.id] ?? null} />
-          ))}
-        </TabsContent>
-        <TabsContent value="past" className="mt-4 space-y-3">
-          {past.length === 0 && <EmptyState label="No past bookings yet" />}
-          {past.map((b) => (
-            <BookingRow key={b.id} booking={b} tab="past" />
-          ))}
-        </TabsContent>
-        <TabsContent value="cancelled" className="mt-4 space-y-3">
-          {cancelled.length === 0 && <EmptyState label="No cancelled bookings" />}
-          {cancelled.map((b) => (
-            <BookingRow key={b.id} booking={b} tab="cancelled" />
-          ))}
-        </TabsContent>
-      </Tabs>
+    <div className={`${outfit.className} min-h-full bg-[#FAF8F5] px-4 py-10 sm:py-14`}>
+      <div className="mx-auto max-w-3xl">
+        <h1 className={`${fraunces.className} mb-8 text-3xl font-semibold text-stone-900`}>My Bookings</h1>
+        <Tabs defaultValue="upcoming">
+          <TabsList className="bg-white shadow-sm">
+            <TabsTrigger value="upcoming" className="data-active:text-[#7C2D3E]">
+              Upcoming ({upcoming.length})
+            </TabsTrigger>
+            <TabsTrigger value="past" className="data-active:text-[#7C2D3E]">
+              Past ({past.length})
+            </TabsTrigger>
+            <TabsTrigger value="cancelled" className="data-active:text-[#7C2D3E]">
+              Cancelled ({cancelled.length})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="upcoming" className="mt-4 space-y-3">
+            {upcoming.length === 0 && <EmptyState label="No upcoming bookings" />}
+            {upcoming.map((b) => (
+              <BookingRow key={b.id} booking={b} tab="upcoming" queuePosition={queuePositions[b.id] ?? null} />
+            ))}
+          </TabsContent>
+          <TabsContent value="past" className="mt-4 space-y-3">
+            {past.length === 0 && <EmptyState label="No past bookings yet" />}
+            {past.map((b) => (
+              <BookingRow key={b.id} booking={b} tab="past" />
+            ))}
+          </TabsContent>
+          <TabsContent value="cancelled" className="mt-4 space-y-3">
+            {cancelled.length === 0 && <EmptyState label="No cancelled bookings" />}
+            {cancelled.map((b) => (
+              <BookingRow key={b.id} booking={b} tab="cancelled" />
+            ))}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
 
 function EmptyState({ label }: { label: string }) {
-  return <p className="py-8 text-center text-sm text-muted-foreground">{label}</p>;
+  return <p className="py-8 text-center text-sm text-stone-500">{label}</p>;
 }

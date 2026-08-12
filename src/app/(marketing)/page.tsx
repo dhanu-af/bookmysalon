@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { Fraunces, Outfit } from "next/font/google";
 import { HeroSearch } from "./_home/hero-search";
 import { getRightNowCards, getTestimonials, getTopBarbers, getTopSalons } from "./_home/homepage-data";
 import { formatPriceCents } from "@/lib/format";
-
-const fraunces = Fraunces({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], style: ["normal", "italic"] });
-const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
+import { fraunces, outfit } from "@/lib/fonts";
 
 const SALON_PHOTOS = [
   "https://images.unsplash.com/photo-1759134198561-e2041049419c?w=700&h=480&fit=crop&auto=format&q=80",
