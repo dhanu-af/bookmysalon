@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { slugify } from "@/lib/slugify";
 import { geocodeAddress } from "@/lib/geo/geocode";
+import { notifyAdminsOfPendingUser } from "@/lib/notifications/admin-alerts";
 
 const registerCustomerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -31,6 +32,8 @@ export async function registerCustomer(input: z.infer<typeof registerCustomerSch
       approvalStatus: "PENDING",
     },
   });
+
+  notifyAdminsOfPendingUser(user.id).catch((e) => console.error("Failed to notify admins of pending signup", e));
 
   return { userId: user.id };
 }
@@ -120,6 +123,8 @@ export async function registerSalon(input: z.infer<typeof registerSalonSchema>) 
 
     return { ownerId: owner.id, salonId: salon.id, slug: salon.slug };
   });
+
+  notifyAdminsOfPendingUser(result.ownerId).catch((e) => console.error("Failed to notify admins of pending salon signup", e));
 
   return result;
 }
