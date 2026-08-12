@@ -28,6 +28,7 @@ export async function registerCustomer(input: z.infer<typeof registerCustomerSch
       email: parsed.data.email,
       phone: parsed.data.phone,
       passwordHash,
+      approvalStatus: "PENDING",
     },
   });
 
@@ -53,11 +54,12 @@ const registerSalonSchema = z.object({
 });
 
 /**
- * Self-service salon registration. Creates the owner's User account, a Salon
- * row in PENDING_APPROVAL (invisible to public search until a super admin
- * approves it — see requireSuperAdmin-gated admin actions), and links the
- * owner via SalonStaff. Defaults to the BASIC plan (2 online barbers) so the
- * owner can add both barbers from the spec's MVP example immediately.
+ * Self-service salon registration. Creates the owner's User account (also
+ * PENDING — they can't sign in until a super admin approves the account
+ * itself, separately from the salon's own approval below), a Salon row in
+ * PENDING_APPROVAL (invisible to public search until approved), and links
+ * the owner via SalonStaff. Defaults to the BASIC plan (2 online barbers) so
+ * the owner can add both barbers from the spec's MVP example immediately.
  */
 export async function registerSalon(input: z.infer<typeof registerSalonSchema>) {
   const parsed = registerSalonSchema.safeParse(input);
@@ -87,6 +89,7 @@ export async function registerSalon(input: z.infer<typeof registerSalonSchema>) 
         email: data.ownerEmail,
         phone: data.ownerPhone,
         passwordHash,
+        approvalStatus: "PENDING",
       },
     });
 

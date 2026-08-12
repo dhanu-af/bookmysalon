@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerSalon } from "@/lib/actions/auth";
 
 export function RegisterSalonForm() {
-  const router = useRouter();
+  const [submitted, setSubmitted] = useState(false);
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
@@ -54,10 +52,17 @@ export function RegisterSalonForm() {
       setSubmitting(false);
       return;
     }
-    await signIn("credentials", { email: ownerEmail, password, redirect: false });
     setSubmitting(false);
-    toast.success("Salon submitted for approval!");
-    router.push(`/dashboard/${result.salonId}`);
+    setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Salon submitted for approval — both your account and your salon listing are pending review. You&apos;ll be able to sign in and
+        set up your dashboard once an admin approves your account.
+      </p>
+    );
   }
 
   return (

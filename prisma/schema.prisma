@@ -18,6 +18,12 @@ datasource db {
 
 // --- Auth (NextAuth v5 + Credentials) ---
 
+enum UserApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String?
@@ -28,6 +34,12 @@ model User {
   // Platform-wide admin — approves salons, manages the whole marketplace.
   // Distinct from StaffRole.OWNER, which is scoped to one salon.
   isSuperAdmin Boolean  @default(false)
+  // Self-service signups (customer + salon owner registration) start PENDING
+  // and can't sign in until a super admin approves them — see auth.ts's
+  // authorize() callback. Accounts created another way (seed data, staff
+  // added by an already-approved owner, admin-created super admins) default
+  // to APPROVED since they were already vetted by whoever created them.
+  approvalStatus UserApprovalStatus @default(APPROVED)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

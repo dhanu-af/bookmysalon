@@ -1,9 +1,16 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
+
+export class AccountPendingError extends CredentialsSignin {
+  code = "account_pending";
+}
+export class AccountRejectedError extends CredentialsSignin {
+  code = "account_rejected";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -26,6 +33,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
+
+        if (!user.isSuperAdmin && user.approvalStatus !== "APPROVED") {
+          throw user.approvalStatus === "REJECTED" ? new AccountRejectedError() : new AccountPendingError();
+        }
 
         return {
           id: user.id,

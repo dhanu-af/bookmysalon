@@ -3,10 +3,12 @@ import { requireSuperAdmin } from "@/lib/session";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/approvals", label: "Approvals" },
   { href: "/admin/salons", label: "Salons" },
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/bookings", label: "Bookings" },
   { href: "/admin/notifications", label: "Notifications" },
+  { href: "/admin/admins", label: "Admins" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

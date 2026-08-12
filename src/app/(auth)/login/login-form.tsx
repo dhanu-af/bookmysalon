@@ -22,6 +22,14 @@ export function LoginForm() {
     setError(null);
     const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
+    if (result?.code === "account_pending") {
+      setError("Your account is still pending approval. You'll be able to sign in once an admin approves it.");
+      return;
+    }
+    if (result?.code === "account_rejected") {
+      setError("This account's approval request was rejected.");
+      return;
+    }
     if (result?.error) {
       setError("Incorrect email or password");
       return;

@@ -1,21 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerCustomer } from "@/lib/actions/auth";
 
 export function RegisterForm() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,20 +21,20 @@ export function RegisterForm() {
     setError(null);
 
     const result = await registerCustomer({ name, email, phone, password });
+    setLoading(false);
     if ("error" in result && result.error) {
       setError(result.error);
-      setLoading(false);
       return;
     }
+    setSubmitted(true);
+  }
 
-    const signInResult = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (signInResult?.error) {
-      router.push("/login");
-      return;
-    }
-    router.push("/");
-    router.refresh();
+  if (submitted) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Account created — it&apos;s now pending approval. You&apos;ll be able to sign in once an admin approves it.
+      </p>
+    );
   }
 
   return (
