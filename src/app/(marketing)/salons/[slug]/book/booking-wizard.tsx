@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,12 +10,69 @@ import { formatPriceCents, formatDuration } from "@/lib/format";
 import { getAvailableSlotsAction } from "@/lib/actions/availability";
 import { createBooking } from "@/lib/booking/create-booking";
 import { localDateStr } from "@/lib/date";
+import { fraunces } from "@/lib/fonts";
 
 type Service = { id: string; name: string; priceCents: number; durationMinutes: number };
 type Barber = { id: string; name: string; title: string | null };
 type Slot = { startAt: string; endAt: string; barberId: string; barberName: string };
 
 const STEPS = ["Service", "Barber", "Date", "Time", "Your details", "Confirm"] as const;
+
+function PrimaryButton({
+  children,
+  className = "",
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={`rounded-xl bg-[#7C2D3E] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+function OutlineButton({
+  children,
+  className = "",
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={`rounded-xl border-2 border-stone-300 px-6 py-3 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-50 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SelectableCard({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
+      className={`cursor-pointer rounded-2xl border-2 p-4 transition-all duration-150 ${
+        selected ? "border-[#7C2D3E] bg-[#7C2D3E]/5" : "border-stone-100 bg-white hover:border-stone-200"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function BookingWizard({
   salon,
@@ -100,9 +155,9 @@ export function BookingWizard({
 
   return (
     <div>
-      <ol className="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      <ol className="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-400">
         {STEPS.map((label, i) => (
-          <li key={label} className={i === step ? "font-semibold text-foreground" : ""}>
+          <li key={label} className={i === step ? "font-semibold text-[#7C2D3E]" : ""}>
             {i + 1}. {label}
           </li>
         ))}
@@ -111,97 +166,92 @@ export function BookingWizard({
       {step === 0 && (
         <div className="space-y-2">
           {services.map((s) => (
-            <Card
-              key={s.id}
-              className={`cursor-pointer transition ${serviceId === s.id ? "border-foreground" : ""}`}
-              onClick={() => setServiceId(s.id)}
-            >
-              <CardContent className="flex items-center justify-between p-4">
+            <SelectableCard key={s.id} selected={serviceId === s.id} onClick={() => setServiceId(s.id)}>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatDuration(s.durationMinutes)}</p>
+                  <p className="font-medium text-stone-900">{s.name}</p>
+                  <p className="text-sm text-stone-500">{formatDuration(s.durationMinutes)}</p>
                 </div>
-                <p className="font-semibold">{formatPriceCents(s.priceCents)}</p>
-              </CardContent>
-            </Card>
+                <p className={`${fraunces.className} font-semibold text-stone-900`}>{formatPriceCents(s.priceCents)}</p>
+              </div>
+            </SelectableCard>
           ))}
-          <Button className="mt-4 w-full" disabled={!serviceId} onClick={() => setStep(1)}>
+          <PrimaryButton className="mt-4 w-full justify-center" disabled={!serviceId} onClick={() => setStep(1)}>
             Continue
-          </Button>
+          </PrimaryButton>
         </div>
       )}
 
       {step === 1 && (
         <div className="space-y-2">
-          <Card className={`cursor-pointer transition ${barberId === "any" ? "border-foreground" : ""}`} onClick={() => setBarberId("any")}>
-            <CardContent className="p-4 font-medium">Any Available Barber</CardContent>
-          </Card>
+          <SelectableCard selected={barberId === "any"} onClick={() => setBarberId("any")}>
+            <p className="font-medium text-stone-900">Any Available Barber</p>
+          </SelectableCard>
           {barbers.map((b) => (
-            <Card key={b.id} className={`cursor-pointer transition ${barberId === b.id ? "border-foreground" : ""}`} onClick={() => setBarberId(b.id)}>
-              <CardContent className="p-4">
-                <p className="font-medium">{b.name}</p>
-                <p className="text-sm text-muted-foreground">{b.title ?? "Barber"}</p>
-              </CardContent>
-            </Card>
+            <SelectableCard key={b.id} selected={barberId === b.id} onClick={() => setBarberId(b.id)}>
+              <p className="font-medium text-stone-900">{b.name}</p>
+              <p className="text-sm text-stone-500">{b.title ?? "Barber"}</p>
+            </SelectableCard>
           ))}
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" onClick={() => setStep(0)}>
-              Back
-            </Button>
-            <Button className="flex-1" onClick={() => setStep(2)}>
+            <OutlineButton onClick={() => setStep(0)}>Back</OutlineButton>
+            <PrimaryButton className="flex-1 justify-center" onClick={() => setStep(2)}>
               Continue
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       )}
 
       {step === 2 && (
         <div>
-          <Calendar
-            mode="single"
-            selected={new Date(`${dateStr}T00:00:00`)}
-            onSelect={(d) => d && setDateStr(localDateStr(d))}
-            disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
-            className="rounded-md border"
-          />
+          <div className="inline-block rounded-2xl border border-stone-100 bg-white p-2 shadow-sm">
+            <Calendar
+              mode="single"
+              selected={new Date(`${dateStr}T00:00:00`)}
+              onSelect={(d) => d && setDateStr(localDateStr(d))}
+              disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
+            />
+          </div>
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" onClick={() => setStep(1)}>
-              Back
-            </Button>
-            <Button className="flex-1" onClick={() => setStep(3)}>
+            <OutlineButton onClick={() => setStep(1)}>Back</OutlineButton>
+            <PrimaryButton className="flex-1 justify-center" onClick={() => setStep(3)}>
               Continue
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       )}
 
       {step === 3 && (
         <div>
-          {loadingSlots && <p className="text-sm text-muted-foreground">Checking availability...</p>}
+          {loadingSlots && <p className="text-sm text-stone-500">Checking availability...</p>}
           {!loadingSlots && timeLabels.length === 0 && (
-            <p className="text-sm text-muted-foreground">No availability on this date. Try another date.</p>
+            <p className="text-sm text-stone-500">No availability on this date. Try another date.</p>
           )}
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {timeLabels.map(([label, slot]) => (
-              <Button
-                key={label}
-                variant={selectedSlot?.startAt === slot.startAt ? "default" : "outline"}
-                onClick={() => setSelectedSlot(slot)}
-              >
-                {label}
-              </Button>
-            ))}
+            {timeLabels.map(([label, slot]) => {
+              const active = selectedSlot?.startAt === slot.startAt;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setSelectedSlot(slot)}
+                  className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                    active ? "border-[#7C2D3E] bg-[#7C2D3E] text-white" : "border-stone-200 bg-white text-stone-700 hover:border-stone-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           {barberId === "any" && selectedSlot && (
-            <p className="mt-3 text-sm text-muted-foreground">Assigned barber: {selectedSlot.barberName}</p>
+            <p className="mt-3 text-sm text-stone-500">Assigned barber: {selectedSlot.barberName}</p>
           )}
           <div className="mt-4 flex gap-2">
-            <Button variant="outline" onClick={() => setStep(2)}>
-              Back
-            </Button>
-            <Button className="flex-1" disabled={!selectedSlot} onClick={() => setStep(4)}>
+            <OutlineButton onClick={() => setStep(2)}>Back</OutlineButton>
+            <PrimaryButton className="flex-1 justify-center" disabled={!selectedSlot} onClick={() => setStep(4)}>
               Continue
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       )}
@@ -221,36 +271,32 @@ export function BookingWizard({
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(3)}>
-              Back
-            </Button>
-            <Button className="flex-1" disabled={!name || !phone} onClick={() => setStep(5)}>
+            <OutlineButton onClick={() => setStep(3)}>Back</OutlineButton>
+            <PrimaryButton className="flex-1 justify-center" disabled={!name || !phone} onClick={() => setStep(5)}>
               Continue
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       )}
 
       {step === 5 && selectedService && selectedSlot && (
         <div className="space-y-4">
-          <Card>
-            <CardContent className="space-y-2 p-4 text-sm">
-              <Row label="Salon" value={salon.name} />
-              <Row label="Service" value={`${selectedService.name} (${formatDuration(selectedService.durationMinutes)})`} />
-              <Row label="Barber" value={barberId === "any" ? `${selectedSlot.barberName} (auto-assigned)` : selectedSlot.barberName} />
-              <Row label="When" value={formatDateTime(selectedSlot.startAt, salon.timezone)} />
-              <Row label="Price" value={formatPriceCents(selectedService.priceCents)} />
-              <Row label="Name" value={name} />
-              <Row label="Mobile" value={phone} />
-            </CardContent>
-          </Card>
+          <div className="space-y-2 rounded-2xl border border-stone-100 bg-white p-5 text-sm shadow-sm">
+            <Row label="Salon" value={salon.name} />
+            <Row label="Service" value={`${selectedService.name} (${formatDuration(selectedService.durationMinutes)})`} />
+            <Row label="Barber" value={barberId === "any" ? `${selectedSlot.barberName} (auto-assigned)` : selectedSlot.barberName} />
+            <Row label="When" value={formatDateTime(selectedSlot.startAt, salon.timezone)} />
+            <Row label="Price" value={formatPriceCents(selectedService.priceCents)} />
+            <Row label="Name" value={name} />
+            <Row label="Mobile" value={phone} />
+          </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(4)} disabled={submitting}>
+            <OutlineButton onClick={() => setStep(4)} disabled={submitting}>
               Back
-            </Button>
-            <Button className="flex-1" onClick={onConfirm} disabled={submitting}>
+            </OutlineButton>
+            <PrimaryButton className="flex-1 justify-center" onClick={onConfirm} disabled={submitting}>
               {submitting ? "Confirming..." : "Confirm Booking"}
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       )}
@@ -260,9 +306,9 @@ export function BookingWizard({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between border-b py-1 last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className="flex justify-between border-b border-stone-100 py-1.5 last:border-0">
+      <span className="text-stone-500">{label}</span>
+      <span className="font-medium text-stone-900">{value}</span>
     </div>
   );
 }

@@ -2,22 +2,20 @@ import Link from "next/link";
 import { Star, MapPin } from "lucide-react";
 import { getPublicSalonBySlug, WEEKDAY_LABELS } from "@/lib/salon-profile";
 import { formatPriceCents, formatDuration } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FavouriteSalonButton } from "@/components/customer/favourite-buttons";
 import { RUNNING_STATUS_LABELS } from "@/lib/salon-status";
+import { fraunces } from "@/lib/fonts";
 
 export default async function SalonProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const salon = await getPublicSalonBySlug(slug);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{salon.name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <h1 className={`${fraunces.className} text-3xl font-semibold text-stone-900`}>{salon.name}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-stone-500">
             <span className="flex items-center gap-1">
               <Star className="size-4 fill-amber-400 text-amber-400" />
               {salon.avgRating > 0 ? salon.avgRating.toFixed(1) : "New"}
@@ -29,70 +27,72 @@ export default async function SalonProfilePage({ params }: { params: Promise<{ s
             </span>
           </div>
           {salon.runningStatus !== "ON_TIME" && (
-            <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-400">
-              {RUNNING_STATUS_LABELS[salon.runningStatus]}
-            </p>
+            <p className="mt-2 text-sm font-medium text-amber-700">{RUNNING_STATUS_LABELS[salon.runningStatus]}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <FavouriteSalonButton salonId={salon.id} />
-          <Link href={`/salons/${salon.slug}/book`}>
-            <Button size="lg">Book Now</Button>
+          <Link
+            href={`/salons/${salon.slug}/book`}
+            className="rounded-xl bg-[#7C2D3E] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98]"
+          >
+            Book Now
           </Link>
         </div>
       </div>
 
-      {salon.description && <p className="mt-4 text-muted-foreground">{salon.description}</p>}
+      {salon.description && <p className="mt-4 text-stone-600">{salon.description}</p>}
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Services</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
+      <section className="mt-10">
+        <h2 className={`${fraunces.className} mb-4 text-lg font-semibold text-stone-900`}>Services</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
           {salon.services.map((service) => (
-            <Card key={service.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium">{service.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatDuration(service.durationMinutes)}</p>
-                </div>
-                <p className="font-semibold">{formatPriceCents(service.priceCents)}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={service.id}
+              className="flex items-center justify-between rounded-2xl border border-stone-100 bg-white p-4 transition-all duration-200 hover:border-stone-200 hover:shadow-md hover:shadow-stone-200/60"
+            >
+              <div>
+                <p className="font-medium text-stone-900">{service.name}</p>
+                <p className="text-sm text-stone-500">{formatDuration(service.durationMinutes)}</p>
+              </div>
+              <p className={`${fraunces.className} font-semibold text-stone-900`}>{formatPriceCents(service.priceCents)}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Barbers</h2>
+      <section className="mt-10">
+        <h2 className={`${fraunces.className} mb-4 text-lg font-semibold text-stone-900`}>Barbers</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {salon.barbers.map((barber) => (
-            <Link key={barber.id} href={`/salons/${salon.slug}/barbers/${barber.id}`}>
-              <Card className="transition hover:border-foreground/30">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <Avatar>
-                    <AvatarFallback>{barber.name.slice(0, 1)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{barber.name}</p>
-                    <p className="text-sm text-muted-foreground">{barber.title ?? "Barber"}</p>
-                  </div>
-                  <span className="ml-auto flex items-center gap-1 text-sm text-muted-foreground">
-                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                    {barber.avgRating > 0 ? barber.avgRating.toFixed(1) : "New"}
-                  </span>
-                </CardContent>
-              </Card>
+            <Link
+              key={barber.id}
+              href={`/salons/${salon.slug}/barbers/${barber.id}`}
+              className="flex items-center gap-3 rounded-2xl border border-stone-100 bg-white p-4 transition-all duration-200 hover:border-stone-200 hover:shadow-md hover:shadow-stone-200/60"
+            >
+              <div className={`${fraunces.className} flex size-10 shrink-0 items-center justify-center rounded-full bg-[#7C2D3E]/10 text-sm font-bold text-[#7C2D3E]`}>
+                {barber.name.slice(0, 1)}
+              </div>
+              <div>
+                <p className="font-medium text-stone-900">{barber.name}</p>
+                <p className="text-sm text-stone-500">{barber.title ?? "Barber"}</p>
+              </div>
+              <span className="ml-auto flex items-center gap-1 text-sm text-stone-500">
+                <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                {barber.avgRating > 0 ? barber.avgRating.toFixed(1) : "New"}
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Opening Hours</h2>
+      <section className="mt-10">
+        <h2 className={`${fraunces.className} mb-4 text-lg font-semibold text-stone-900`}>Opening Hours</h2>
         <div className="max-w-sm space-y-1 text-sm">
           {salon.openingHours.map((oh) => (
-            <div key={oh.dayOfWeek} className="flex justify-between border-b py-1.5 last:border-0">
-              <span>{WEEKDAY_LABELS[oh.dayOfWeek]}</span>
-              <span className="text-muted-foreground">
+            <div key={oh.dayOfWeek} className="flex justify-between border-b border-stone-200 py-2 last:border-0">
+              <span className="text-stone-700">{WEEKDAY_LABELS[oh.dayOfWeek]}</span>
+              <span className="text-stone-500">
                 {oh.isClosed ? "Closed" : `${formatHHmm(oh.openMin!)} – ${formatHHmm(oh.closeMin!)}`}
               </span>
             </div>
@@ -100,11 +100,12 @@ export default async function SalonProfilePage({ params }: { params: Promise<{ s
         </div>
       </section>
 
-      <div className="mt-8">
-        <Link href={`/salons/${salon.slug}/book`}>
-          <Button size="lg" className="w-full sm:w-auto">
-            View Available Appointments
-          </Button>
+      <div className="mt-10">
+        <Link
+          href={`/salons/${salon.slug}/book`}
+          className="inline-flex w-full items-center justify-center rounded-xl bg-[#7C2D3E] px-8 py-4 text-base font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] sm:w-auto"
+        >
+          View Available Appointments
         </Link>
       </div>
     </div>

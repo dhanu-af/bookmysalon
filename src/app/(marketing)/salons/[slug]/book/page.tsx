@@ -1,6 +1,7 @@
 import { getPublicSalonBySlug } from "@/lib/salon-profile";
 import { getCurrentUser } from "@/lib/session";
 import { BookingWizard } from "./booking-wizard";
+import { fraunces } from "@/lib/fonts";
 
 export default async function BookSalonPage({
   params,
@@ -15,9 +16,9 @@ export default async function BookSalonPage({
   const user = await getCurrentUser();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-1 text-2xl font-bold">Book at {salon.name}</h1>
-      <p className="mb-6 text-sm text-muted-foreground">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
+      <h1 className={`${fraunces.className} mb-1 text-2xl font-semibold text-stone-900`}>Book at {salon.name}</h1>
+      <p className="mb-6 text-sm text-stone-500">
         {salon.suburb}, {salon.state}
       </p>
       <BookingWizard

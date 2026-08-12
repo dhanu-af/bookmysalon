@@ -1,26 +1,24 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
+import { fraunces } from "@/lib/fonts";
 
 export default function LoginPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to manage your bookings</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-2xl border border-stone-100 bg-white p-6 shadow-xl shadow-stone-300/40 sm:p-8">
+      <h1 className={`${fraunces.className} text-2xl font-semibold text-stone-900`}>Welcome back</h1>
+      <p className="mt-1 mb-6 text-sm text-stone-500">Sign in to manage your bookings</p>
+      <div className="space-y-4">
         <Suspense>
           <LoginForm />
         </Suspense>
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-stone-500">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-foreground underline">
+          <Link href="/register" className="font-medium text-[#7C2D3E] underline">
             Sign up
           </Link>
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

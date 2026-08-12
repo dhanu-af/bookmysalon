@@ -19,7 +19,7 @@ export function SearchFilters({ hasLocation }: { hasLocation: boolean }) {
   return (
     <div className="flex flex-wrap gap-3">
       <Select defaultValue={searchParams.get("sort") ?? (hasLocation ? "distance" : "rating")} onValueChange={(v) => update("sort", v)}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="w-40 rounded-xl border-2 border-stone-200 bg-white py-2.5 hover:border-stone-300">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
@@ -31,7 +31,7 @@ export function SearchFilters({ hasLocation }: { hasLocation: boolean }) {
 
       {hasLocation && (
         <Select defaultValue={searchParams.get("radiusKm") ?? "10"} onValueChange={(v) => update("radiusKm", v)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 rounded-xl border-2 border-stone-200 bg-white py-2.5 hover:border-stone-300">
             <SelectValue placeholder="Radius" />
           </SelectTrigger>
           <SelectContent>

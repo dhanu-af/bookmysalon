@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { getAvailableSlotsAction } from "@/lib/actions/availability";
 import { rescheduleBooking } from "@/lib/actions/bookings";
 import { localDateStr } from "@/lib/date";
+import { fraunces } from "@/lib/fonts";
 
 export function RescheduleDialog({
   bookingId,
@@ -61,7 +61,7 @@ export function RescheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reschedule booking</DialogTitle>
+          <DialogTitle className={fraunces.className}>Reschedule booking</DialogTitle>
         </DialogHeader>
         <Calendar
           mode="single"
@@ -73,16 +73,31 @@ export function RescheduleDialog({
         {loading && <p className="text-sm text-muted-foreground">Checking availability...</p>}
         {!loading && slots && slots.length === 0 && <p className="text-sm text-muted-foreground">No availability on this date.</p>}
         <div className="grid grid-cols-4 gap-2">
-          {slots?.map((s) => (
-            <Button key={s.startAt} variant={selected === s.startAt ? "default" : "outline"} size="sm" onClick={() => setSelected(s.startAt)}>
-              {formatTime(s.startAt, timezone)}
-            </Button>
-          ))}
+          {slots?.map((s) => {
+            const active = selected === s.startAt;
+            return (
+              <button
+                key={s.startAt}
+                type="button"
+                onClick={() => setSelected(s.startAt)}
+                className={`rounded-lg border-2 px-2 py-1.5 text-sm font-medium transition-all duration-150 ${
+                  active ? "border-[#7C2D3E] bg-[#7C2D3E] text-white" : "border-stone-200 bg-white text-stone-700 hover:border-stone-300"
+                }`}
+              >
+                {formatTime(s.startAt, timezone)}
+              </button>
+            );
+          })}
         </div>
         <DialogFooter>
-          <Button disabled={!selected || submitting} onClick={onConfirm}>
+          <button
+            type="button"
+            disabled={!selected || submitting}
+            onClick={onConfirm}
+            className="rounded-xl bg-[#7C2D3E] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+          >
             {submitting ? "Saving..." : "Confirm new time"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

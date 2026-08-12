@@ -4,14 +4,17 @@ import { useState, useTransition, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { toggleFavouriteSalon, toggleFavouriteBarber, isFavouriteSalon, isFavouriteBarber } from "@/lib/actions/favourites";
 
 function FavouriteButtonBase({
   initialFavourited,
   toggle,
+  className,
 }: {
   initialFavourited: boolean;
   toggle: () => Promise<{ favourited?: boolean; error?: string }>;
+  className?: string;
 }) {
   const [favourited, setFavourited] = useState(initialFavourited);
   const [pending, startTransition] = useTransition();
@@ -21,6 +24,7 @@ function FavouriteButtonBase({
       type="button"
       variant="outline"
       size="icon"
+      className={cn("rounded-xl border-2 border-stone-300 hover:border-stone-400", className)}
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
@@ -39,18 +43,18 @@ function FavouriteButtonBase({
   );
 }
 
-export function FavouriteSalonButton({ salonId }: { salonId: string }) {
+export function FavouriteSalonButton({ salonId, className }: { salonId: string; className?: string }) {
   const [initial, setInitial] = useState(false);
   useEffect(() => {
     isFavouriteSalon(salonId).then(setInitial);
   }, [salonId]);
-  return <FavouriteButtonBase initialFavourited={initial} toggle={() => toggleFavouriteSalon(salonId)} />;
+  return <FavouriteButtonBase initialFavourited={initial} toggle={() => toggleFavouriteSalon(salonId)} className={className} />;
 }
 
-export function FavouriteBarberButton({ barberId }: { barberId: string }) {
+export function FavouriteBarberButton({ barberId, className }: { barberId: string; className?: string }) {
   const [initial, setInitial] = useState(false);
   useEffect(() => {
     isFavouriteBarber(barberId).then(setInitial);
   }, [barberId]);
-  return <FavouriteButtonBase initialFavourited={initial} toggle={() => toggleFavouriteBarber(barberId)} />;
+  return <FavouriteButtonBase initialFavourited={initial} toggle={() => toggleFavouriteBarber(barberId)} className={className} />;
 }

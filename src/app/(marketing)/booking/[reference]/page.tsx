@@ -3,8 +3,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatPriceCents } from "@/lib/format";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { fraunces } from "@/lib/fonts";
 
 export default async function BookingConfirmationPage({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
@@ -16,30 +15,32 @@ export default async function BookingConfirmationPage({ params }: { params: Prom
   if (!booking) notFound();
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12 text-center">
-      <CheckCircle2 className="mx-auto size-12 text-green-600" />
-      <h1 className="mt-4 text-2xl font-bold">Booking confirmed!</h1>
-      <p className="mt-1 text-muted-foreground">Your booking reference</p>
-      <p className="mt-1 text-3xl font-bold tracking-wide">{booking.reference}</p>
+    <div className="mx-auto max-w-lg px-4 py-14 text-center sm:py-20">
+      <CheckCircle2 className="mx-auto size-12 text-emerald-600" />
+      <h1 className={`${fraunces.className} mt-4 text-2xl font-semibold text-stone-900`}>Booking confirmed!</h1>
+      <p className="mt-1 text-stone-500">Your booking reference</p>
+      <p className={`${fraunces.className} mt-1 text-3xl font-bold tracking-wide text-[#7C2D3E]`}>{booking.reference}</p>
 
-      <Card className="mt-6 text-left">
-        <CardContent className="space-y-2 p-4 text-sm">
-          <Row label="Salon" value={booking.salon.name} />
-          <Row label="Barber" value={booking.barber.name} />
-          <Row label="Service" value={booking.serviceNameSnapshot} />
-          <Row label="When" value={formatDateTime(booking.startAt, booking.salon.timezone)} />
-          <Row label="Price" value={formatPriceCents(booking.priceCentsSnapshot)} />
-        </CardContent>
-      </Card>
+      <div className="mt-6 space-y-2 rounded-2xl border border-stone-100 bg-white p-5 text-left text-sm shadow-sm">
+        <Row label="Salon" value={booking.salon.name} />
+        <Row label="Barber" value={booking.barber.name} />
+        <Row label="Service" value={booking.serviceNameSnapshot} />
+        <Row label="When" value={formatDateTime(booking.startAt, booking.salon.timezone)} />
+        <Row label="Price" value={formatPriceCents(booking.priceCentsSnapshot)} />
+      </div>
 
-      <div className="mt-6 flex flex-col gap-2">
-        <Link href={`/salons/${booking.salon.slug}`}>
-          <Button variant="outline" className="w-full">
-            View Salon
-          </Button>
+      <div className="mt-6 flex flex-col gap-3">
+        <Link
+          href={`/salons/${booking.salon.slug}`}
+          className="rounded-xl border-2 border-stone-300 py-3 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900"
+        >
+          View Salon
         </Link>
-        <Link href="/register">
-          <Button className="w-full">Create an account to manage this booking</Button>
+        <Link
+          href="/register"
+          className="rounded-xl bg-[#7C2D3E] py-3 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98]"
+        >
+          Create an account to manage this booking
         </Link>
       </div>
     </div>
@@ -48,9 +49,9 @@ export default async function BookingConfirmationPage({ params }: { params: Prom
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between border-b py-1 last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className="flex justify-between border-b border-stone-100 py-1.5 last:border-0">
+      <span className="text-stone-500">{label}</span>
+      <span className="font-medium text-stone-900">{value}</span>
     </div>
   );
 }

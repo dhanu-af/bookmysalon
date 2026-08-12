@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -42,16 +41,34 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input
+          id="email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-xl border-2 border-stone-200 focus-visible:border-[#7C2D3E] focus-visible:ring-[#7C2D3E]/20"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input
+          id="password"
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rounded-xl border-2 border-stone-200 focus-visible:border-[#7C2D3E] focus-visible:ring-[#7C2D3E]/20"
+        />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-xl bg-[#7C2D3E] py-2.5 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+      >
         {loading ? "Signing in..." : "Sign in"}
-      </Button>
+      </button>
     </form>
   );
 }
