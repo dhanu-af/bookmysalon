@@ -4,12 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addWalkIn } from "@/lib/actions/dashboard-bookings";
 import { localDateStr } from "@/lib/date";
+import { fraunces } from "@/lib/fonts";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 export function AddWalkInDialog({
   salonId,
@@ -49,10 +52,10 @@ export function AddWalkInDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Add Walk-In</Button>} />
+      <DialogTrigger render={<button className={primaryButtonClassName}>Add Walk-In</button>} />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Walk-In</DialogTitle>
+          <DialogTitle className={fraunces.className}>Add Walk-In</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -101,9 +104,9 @@ export function AddWalkInDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button disabled={!barberId || !serviceId || submitting} onClick={onSubmit}>
+          <button className={primaryButtonClassName} disabled={!barberId || !serviceId || submitting} onClick={onSubmit}>
             {submitting ? "Adding..." : "Add Walk-In"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

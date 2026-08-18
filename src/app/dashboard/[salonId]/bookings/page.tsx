@@ -2,6 +2,7 @@ import { requireSalonStaff, bookingScopeForStaff } from "@/lib/session";
 import { db } from "@/lib/db";
 import { AddWalkInDialog } from "./add-walk-in-dialog";
 import { BookingStatusRow } from "./booking-status-row";
+import { fraunces } from "@/lib/fonts";
 
 export default async function DashboardBookingsPage({ params }: { params: Promise<{ salonId: string }> }) {
   const { salonId } = await params;
@@ -22,11 +23,11 @@ export default async function DashboardBookingsPage({ params }: { params: Promis
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Bookings</h1>
+        <h1 className={`${fraunces.className} text-2xl font-semibold text-stone-900`}>Bookings</h1>
         <AddWalkInDialog salonId={salonId} barbers={barbers} services={services} />
       </div>
       <div className="space-y-2">
-        {bookings.length === 0 && <p className="text-sm text-muted-foreground">No bookings yet.</p>}
+        {bookings.length === 0 && <p className="text-sm text-stone-500">No bookings yet.</p>}
         {bookings.map((b) => (
           <BookingStatusRow key={b.id} booking={b} salonId={salonId} timezone={salon.timezone} />
         ))}

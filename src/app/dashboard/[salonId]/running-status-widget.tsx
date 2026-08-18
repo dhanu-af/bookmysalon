@@ -3,8 +3,6 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { setSalonRunningStatus } from "@/lib/actions/salon-status";
 import { RUNNING_STATUS_LABELS } from "@/lib/salon-status";
 import type { SalonRunningStatus } from "@/generated/prisma/client";
@@ -24,21 +22,26 @@ export function RunningStatusWidget({ salonId, current }: { salonId: string; cur
   }
 
   return (
-    <Card className="mb-6">
-      <CardContent className="flex flex-wrap items-center gap-2 p-4">
-        <span className="mr-2 text-sm font-medium text-muted-foreground">Running status:</span>
-        {OPTIONS.map((status) => (
-          <Button
+    <div className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+      <span className="mr-2 text-sm font-medium text-stone-500">Running status:</span>
+      {OPTIONS.map((status) => {
+        const active = current === status;
+        return (
+          <button
             key={status}
-            size="sm"
-            variant={current === status ? "default" : "outline"}
+            type="button"
             disabled={pending}
             onClick={() => setStatus(status)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 ${
+              active
+                ? "bg-[#7C2D3E] text-white shadow-sm"
+                : "border-2 border-stone-300 text-stone-700 hover:border-stone-400 hover:text-stone-900"
+            }`}
           >
             {RUNNING_STATUS_LABELS[status]}
-          </Button>
-        ))}
-      </CardContent>
-    </Card>
+          </button>
+        );
+      })}
+    </div>
   );
 }

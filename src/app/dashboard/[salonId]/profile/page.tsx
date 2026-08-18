@@ -1,6 +1,7 @@
 import { requireSalonOwner } from "@/lib/session";
 import { db } from "@/lib/db";
 import { ProfileEditor } from "./profile-editor";
+import { fraunces } from "@/lib/fonts";
 
 export default async function SalonProfilePage({ params }: { params: Promise<{ salonId: string }> }) {
   const { salonId } = await params;
@@ -9,9 +10,9 @@ export default async function SalonProfilePage({ params }: { params: Promise<{ s
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-1 text-2xl font-bold">Salon Profile</h1>
+      <h1 className={`${fraunces.className} mb-1 text-2xl font-semibold text-stone-900`}>Salon Profile</h1>
       {salon.approvalStatus === "PENDING_APPROVAL" && (
-        <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           Your salon is pending admin approval and won&apos;t appear in customer search yet.
         </p>
       )}

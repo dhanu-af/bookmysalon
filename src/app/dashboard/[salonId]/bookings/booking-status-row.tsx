@@ -3,11 +3,10 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatPriceCents } from "@/lib/format";
 import { updateBookingStatus } from "@/lib/actions/dashboard-bookings";
+import { fraunces } from "@/lib/fonts";
 import type { BookingStatus } from "@/generated/prisma/client";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -65,28 +64,32 @@ export function BookingStatusRow({
   const actions = NEXT_ACTIONS[booking.status] ?? [];
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-medium">{booking.guestName}</p>
-            <Badge variant={STATUS_VARIANT[booking.status] ?? "outline"}>{booking.status}</Badge>
-            {booking.source === "WALK_IN" && <Badge variant="outline">Walk-in</Badge>}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {booking.serviceNameSnapshot} with {booking.barber.name} · {formatDateTime(booking.startAt, timezone)} ·{" "}
-            {formatPriceCents(booking.priceCentsSnapshot)}
-          </p>
+    <div className="flex flex-col gap-2 rounded-2xl border border-stone-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <p className={`${fraunces.className} font-semibold text-stone-900`}>{booking.guestName}</p>
+          <Badge variant={STATUS_VARIANT[booking.status] ?? "outline"}>{booking.status}</Badge>
+          {booking.source === "WALK_IN" && <Badge variant="outline">Walk-in</Badge>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {actions.map((a) => (
-            <Button key={a.label} variant="outline" size="sm" disabled={pending} onClick={() => setStatus(a.next)}>
-              {a.label}
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+        <p className="text-sm text-stone-500">
+          {booking.serviceNameSnapshot} with {booking.barber.name} · {formatDateTime(booking.startAt, timezone)} ·{" "}
+          {formatPriceCents(booking.priceCentsSnapshot)}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {actions.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            disabled={pending}
+            onClick={() => setStatus(a.next)}
+            className="rounded-lg border-2 border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

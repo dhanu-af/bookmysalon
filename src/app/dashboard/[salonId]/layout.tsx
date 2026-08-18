@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSalonStaff } from "@/lib/session";
 import { db } from "@/lib/db";
+import { fraunces, outfit } from "@/lib/fonts";
 
 const OWNER_NAV = [
   { href: "", label: "Dashboard" },
@@ -33,15 +34,15 @@ export default async function SalonDashboardLayout({
   const nav = staff.role === "OWNER" ? OWNER_NAV : BARBER_NAV;
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="border-b bg-muted/30 p-4 md:w-56 md:border-b-0 md:border-r">
-        <p className="mb-4 font-semibold">{salon.name}</p>
+    <div className={`${outfit.className} flex min-h-screen flex-col bg-[#FAF8F5] md:flex-row`}>
+      <aside className="border-b border-stone-200 bg-white p-4 md:w-56 md:border-b-0 md:border-r">
+        <p className={`${fraunces.className} mb-4 font-semibold text-stone-900`}>{salon.name}</p>
         <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
           {nav.map((item) => (
             <Link
               key={item.label}
               href={`/dashboard/${salonId}${item.href}`}
-              className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-stone-600 hover:bg-[#7C2D3E]/5 hover:text-[#7C2D3E]"
             >
               {item.label}
             </Link>

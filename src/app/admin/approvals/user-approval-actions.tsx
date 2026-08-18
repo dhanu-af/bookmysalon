@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { approveUser, rejectUser } from "@/lib/actions/admin";
 
 export function UserApprovalActions({ userId }: { userId: string }) {
@@ -20,12 +19,22 @@ export function UserApprovalActions({ userId }: { userId: string }) {
 
   return (
     <div className="flex gap-2">
-      <Button size="sm" disabled={pending} onClick={() => run(approveUser, "Account approved")}>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(approveUser, "Account approved")}
+        className="rounded-lg bg-[#7C2D3E] px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-[#6B2535] disabled:pointer-events-none disabled:opacity-50"
+      >
         Approve
-      </Button>
-      <Button size="sm" variant="outline" disabled={pending} onClick={() => run(rejectUser, "Account rejected")}>
+      </button>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(rejectUser, "Account rejected")}
+        className="rounded-lg border-2 border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-50"
+      >
         Reject
-      </Button>
+      </button>
     </div>
   );
 }

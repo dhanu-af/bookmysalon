@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createBarber } from "@/lib/actions/barbers";
+import { fraunces } from "@/lib/fonts";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 export function AddBarberDialog({ salonId, atLimit }: { salonId: string; atLimit: boolean }) {
   const router = useRouter();
@@ -35,10 +38,10 @@ export function AddBarberDialog({ salonId, atLimit }: { salonId: string; atLimit
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Add Barber</Button>} />
+      <DialogTrigger render={<button className={primaryButtonClassName}>Add Barber</button>} />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Barber</DialogTitle>
+          <DialogTitle className={fraunces.className}>Add Barber</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -60,9 +63,9 @@ export function AddBarberDialog({ salonId, atLimit }: { salonId: string; atLimit
           </div>
         </div>
         <DialogFooter>
-          <Button disabled={!name || submitting} onClick={onSubmit}>
+          <button className={primaryButtonClassName} disabled={!name || submitting} onClick={onSubmit}>
             {submitting ? "Adding..." : "Add Barber"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

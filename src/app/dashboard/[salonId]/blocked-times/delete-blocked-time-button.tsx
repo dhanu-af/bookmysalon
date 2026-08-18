@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { deleteBlockedTime } from "@/lib/actions/blocked-times";
 
 export function DeleteBlockedTimeButton({ blockedTimeId, salonId }: { blockedTimeId: string; salonId: string }) {
@@ -11,9 +10,9 @@ export function DeleteBlockedTimeButton({ blockedTimeId, salonId }: { blockedTim
   const [pending, startTransition] = useTransition();
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
+    <button
+      type="button"
+      className="rounded-lg border-2 border-stone-300 px-3 py-1 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-50"
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
@@ -24,6 +23,6 @@ export function DeleteBlockedTimeButton({ blockedTimeId, salonId }: { blockedTim
       }
     >
       Remove
-    </Button>
+    </button>
   );
 }

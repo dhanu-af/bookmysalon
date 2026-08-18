@@ -1,8 +1,8 @@
 import { requireSalonStaff } from "@/lib/session";
 import { db } from "@/lib/db";
-import { Card, CardContent } from "@/components/ui/card";
 import { AddBlockedTimeDialog } from "./add-blocked-time-dialog";
 import { DeleteBlockedTimeButton } from "./delete-blocked-time-button";
+import { fraunces } from "@/lib/fonts";
 
 export default async function BlockedTimesPage({ params }: { params: Promise<{ salonId: string }> }) {
   const { salonId } = await params;
@@ -17,23 +17,21 @@ export default async function BlockedTimesPage({ params }: { params: Promise<{ s
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Blocked Times</h1>
+        <h1 className={`${fraunces.className} text-2xl font-semibold text-stone-900`}>Blocked Times</h1>
         <AddBlockedTimeDialog salonId={salonId} barbers={barbers} />
       </div>
       <div className="space-y-2">
-        {blockedTimes.length === 0 && <p className="text-sm text-muted-foreground">No upcoming blocked times.</p>}
+        {blockedTimes.length === 0 && <p className="text-sm text-stone-500">No upcoming blocked times.</p>}
         {blockedTimes.map((bt) => (
-          <Card key={bt.id}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <p className="font-medium">{bt.reason}</p>
-                <p className="text-sm text-muted-foreground">
-                  {bt.barber ? bt.barber.name : "Whole salon"} · {formatRange(bt.startAt, bt.endAt, salon.timezone)}
-                </p>
-              </div>
-              <DeleteBlockedTimeButton blockedTimeId={bt.id} salonId={salonId} />
-            </CardContent>
-          </Card>
+          <div key={bt.id} className="flex items-center justify-between rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+            <div>
+              <p className={`${fraunces.className} font-semibold text-stone-900`}>{bt.reason}</p>
+              <p className="text-sm text-stone-500">
+                {bt.barber ? bt.barber.name : "Whole salon"} · {formatRange(bt.startAt, bt.endAt, salon.timezone)}
+              </p>
+            </div>
+            <DeleteBlockedTimeButton blockedTimeId={bt.id} salonId={salonId} />
+          </div>
         ))}
       </div>
     </div>

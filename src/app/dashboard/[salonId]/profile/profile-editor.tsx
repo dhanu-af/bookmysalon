@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateSalonProfile } from "@/lib/actions/salon-profile";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 export function ProfileEditor({
   salon,
@@ -64,9 +66,9 @@ export function ProfileEditor({
           <Input value={postcode} onChange={(e) => setPostcode(e.target.value)} />
         </div>
       </div>
-      <Button disabled={submitting} onClick={onSubmit}>
+      <button className={primaryButtonClassName} disabled={submitting} onClick={onSubmit}>
         {submitting ? "Saving..." : "Save Profile"}
-      </Button>
+      </button>
     </div>
   );
 }

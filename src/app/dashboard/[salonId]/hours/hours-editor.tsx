@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
 import { setOpeningHours } from "@/lib/actions/opening-hours";
 import { minutesToHHmm } from "@/lib/booking/slots";
 
@@ -37,9 +35,9 @@ export function HoursEditor({ salonId, initialHours }: { salonId: string; initia
   return (
     <div className="space-y-3">
       {hours.map((h, i) => (
-        <Card key={h.dayOfWeek}>
-          <CardContent className="flex flex-wrap items-center gap-3 p-3">
-            <span className="w-24 text-sm font-medium">{WEEKDAY_LABELS[h.dayOfWeek]}</span>
+        <div key={h.dayOfWeek} className="rounded-2xl border border-stone-100 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 p-3">
+            <span className="w-24 text-sm font-medium text-stone-900">{WEEKDAY_LABELS[h.dayOfWeek]}</span>
             <label className="flex items-center gap-1.5 text-sm">
               <Checkbox
                 checked={!h.isClosed}
@@ -63,7 +61,7 @@ export function HoursEditor({ salonId, initialHours }: { salonId: string; initia
                     setHours(next);
                   }}
                 />
-                <span className="text-sm text-muted-foreground">to</span>
+                <span className="text-sm text-stone-500">to</span>
                 <Input
                   type="time"
                   className="w-28"
@@ -76,12 +74,16 @@ export function HoursEditor({ salonId, initialHours }: { salonId: string; initia
                 />
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
-      <Button disabled={saving} onClick={onSave}>
+      <button
+        className="rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+        disabled={saving}
+        onClick={onSave}
+      >
         {saving ? "Saving..." : "Save Opening Hours"}
-      </Button>
+      </button>
     </div>
   );
 }

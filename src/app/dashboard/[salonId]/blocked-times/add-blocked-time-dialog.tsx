@@ -4,12 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createBlockedTime } from "@/lib/actions/blocked-times";
 import { localDateStr } from "@/lib/date";
+import { fraunces } from "@/lib/fonts";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 export function AddBlockedTimeDialog({ salonId, barbers }: { salonId: string; barbers: { id: string; name: string }[] }) {
   const router = useRouter();
@@ -41,10 +44,10 @@ export function AddBlockedTimeDialog({ salonId, barbers }: { salonId: string; ba
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Block Time</Button>} />
+      <DialogTrigger render={<button className={primaryButtonClassName}>Block Time</button>} />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Block Time</DialogTitle>
+          <DialogTitle className={fraunces.className}>Block Time</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -83,9 +86,9 @@ export function AddBlockedTimeDialog({ salonId, barbers }: { salonId: string; ba
           </div>
         </div>
         <DialogFooter>
-          <Button disabled={submitting} onClick={onSubmit}>
+          <button className={primaryButtonClassName} disabled={submitting} onClick={onSubmit}>
             {submitting ? "Saving..." : "Block Time"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

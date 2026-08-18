@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { Card, CardContent } from "@/components/ui/card";
+import { fraunces } from "@/lib/fonts";
 
 export default async function AdminDashboardPage() {
   const now = new Date();
@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Platform Dashboard</h1>
+      <h1 className={`${fraunces.className} mb-6 text-2xl font-semibold text-stone-900`}>Platform Dashboard</h1>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Total Salons" value={totalSalons} />
         <StatCard label="Active Salons" value={activeSalons} />
@@ -42,11 +42,9 @@ export default async function AdminDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card>
-      <CardContent className="p-4 text-center">
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-stone-100 bg-white p-4 text-center shadow-sm">
+      <p className={`${fraunces.className} text-2xl font-bold text-stone-900`}>{value}</p>
+      <p className="text-xs text-stone-500">{label}</p>
+    </div>
   );
 }

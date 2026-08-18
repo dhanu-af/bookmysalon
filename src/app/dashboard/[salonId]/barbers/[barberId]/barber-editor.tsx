@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateBarber, setBarberWorkingHours, setBarberBreak, setBarberServices } from "@/lib/actions/barbers";
 import { minutesToHHmm } from "@/lib/booking/slots";
+import { fraunces } from "@/lib/fonts";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -86,13 +88,19 @@ export function BarberEditor({
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold">{barber.name}</h1>
+      <h1 className={`${fraunces.className} mb-6 text-2xl font-semibold text-stone-900`}>{barber.name}</h1>
 
       <Tabs defaultValue="info">
         <TabsList>
-          <TabsTrigger value="info">Info</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="info" className="data-active:text-[#7C2D3E]">
+            Info
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="data-active:text-[#7C2D3E]">
+            Schedule
+          </TabsTrigger>
+          <TabsTrigger value="services" className="data-active:text-[#7C2D3E]">
+            Services
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="mt-4 space-y-4">
@@ -104,24 +112,24 @@ export function BarberEditor({
             <Label>Title</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <p className="text-sm font-medium">Online booking</p>
+          <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-3">
+            <p className="text-sm font-medium text-stone-900">Online booking</p>
             <Switch checked={bookableOnline} onCheckedChange={setBookableOnline} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <p className="text-sm font-medium">Active</p>
+          <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-3">
+            <p className="text-sm font-medium text-stone-900">Active</p>
             <Switch checked={active} onCheckedChange={setActive} />
           </div>
-          <Button disabled={savingInfo} onClick={saveInfo}>
+          <button className={primaryButtonClassName} disabled={savingInfo} onClick={saveInfo}>
             {savingInfo ? "Saving..." : "Save"}
-          </Button>
+          </button>
         </TabsContent>
 
         <TabsContent value="schedule" className="mt-4 space-y-3">
           {hours.map((h, i) => (
-            <Card key={h.dayOfWeek}>
-              <CardContent className="flex flex-wrap items-center gap-3 p-3">
-                <span className="w-24 text-sm font-medium">{WEEKDAY_LABELS[h.dayOfWeek]}</span>
+            <div key={h.dayOfWeek} className="rounded-2xl border border-stone-100 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 p-3">
+                <span className="w-24 text-sm font-medium text-stone-900">{WEEKDAY_LABELS[h.dayOfWeek]}</span>
                 <label className="flex items-center gap-1.5 text-sm">
                   <Checkbox
                     checked={!h.isOff}
@@ -145,7 +153,7 @@ export function BarberEditor({
                         setHours(next);
                       }}
                     />
-                    <span className="text-sm text-muted-foreground">to</span>
+                    <span className="text-sm text-stone-500">to</span>
                     <Input
                       type="time"
                       className="w-28"
@@ -156,7 +164,7 @@ export function BarberEditor({
                         setHours(next);
                       }}
                     />
-                    <span className="ml-4 text-xs text-muted-foreground">Break:</span>
+                    <span className="ml-4 text-xs text-stone-500">Break:</span>
                     <Input
                       type="time"
                       className="w-24"
@@ -168,7 +176,7 @@ export function BarberEditor({
                         })
                       }
                     />
-                    <span className="text-xs text-muted-foreground">to</span>
+                    <span className="text-xs text-stone-500">to</span>
                     <Input
                       type="time"
                       className="w-24"
@@ -177,17 +185,17 @@ export function BarberEditor({
                     />
                   </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
-          <Button disabled={savingSchedule} onClick={saveSchedule}>
+          <button className={primaryButtonClassName} disabled={savingSchedule} onClick={saveSchedule}>
             {savingSchedule ? "Saving..." : "Save Schedule"}
-          </Button>
+          </button>
         </TabsContent>
 
         <TabsContent value="services" className="mt-4 space-y-2">
           {services.map((s) => (
-            <label key={s.id} className="flex items-center gap-2 rounded-lg border p-3 text-sm">
+            <label key={s.id} className="flex items-center gap-2 rounded-xl border border-stone-200 bg-white p-3 text-sm text-stone-900">
               <Checkbox
                 checked={serviceIds.includes(s.id)}
                 onCheckedChange={(checked) =>
@@ -197,9 +205,9 @@ export function BarberEditor({
               {s.name}
             </label>
           ))}
-          <Button disabled={savingServices} onClick={saveServices}>
+          <button className={primaryButtonClassName} disabled={savingServices} onClick={saveServices}>
             {savingServices ? "Saving..." : "Save Services"}
-          </Button>
+          </button>
         </TabsContent>
       </Tabs>
     </div>

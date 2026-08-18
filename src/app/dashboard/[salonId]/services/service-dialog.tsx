@@ -4,11 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createService, updateService } from "@/lib/actions/services";
+import { fraunces } from "@/lib/fonts";
+
+const primaryButtonClassName =
+  "rounded-xl bg-[#7C2D3E] px-5 py-2 text-sm font-semibold text-white shadow-md shadow-[#7C2D3E]/20 transition-all duration-150 hover:bg-[#6B2535] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
+const outlineButtonSmClassName =
+  "rounded-lg border-2 border-stone-300 px-3 py-1 text-sm font-medium text-stone-700 transition-all duration-150 hover:border-stone-400 hover:text-stone-900";
 
 type Existing = { id: string; name: string; priceCents: number; durationMinutes: number; active: boolean };
 
@@ -39,14 +44,12 @@ export function ServiceDialog({ salonId, existing }: { salonId: string; existing
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant={existing ? "outline" : "default"} size={existing ? "sm" : "default"}>
-            {existing ? "Edit" : "Add Service"}
-          </Button>
+          <button className={existing ? outlineButtonSmClassName : primaryButtonClassName}>{existing ? "Edit" : "Add Service"}</button>
         }
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{existing ? "Edit Service" : "Add Service"}</DialogTitle>
+          <DialogTitle className={fraunces.className}>{existing ? "Edit Service" : "Add Service"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -64,16 +67,16 @@ export function ServiceDialog({ salonId, existing }: { salonId: string; existing
             </div>
           </div>
           {existing && (
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <p className="text-sm font-medium">Active</p>
+            <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-3">
+              <p className="text-sm font-medium text-stone-900">Active</p>
               <Switch checked={active} onCheckedChange={setActive} />
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button disabled={!name || !price || submitting} onClick={onSubmit}>
+          <button className={primaryButtonClassName} disabled={!name || !price || submitting} onClick={onSubmit}>
             {submitting ? "Saving..." : "Save"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

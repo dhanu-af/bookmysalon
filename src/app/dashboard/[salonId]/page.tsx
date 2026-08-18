@@ -1,7 +1,7 @@
 import { requireSalonStaff } from "@/lib/session";
 import { getTodayStats } from "@/lib/dashboard/stats";
-import { Card, CardContent } from "@/components/ui/card";
 import { RunningStatusWidget } from "./running-status-widget";
+import { fraunces } from "@/lib/fonts";
 
 export default async function SalonDashboardPage({ params }: { params: Promise<{ salonId: string }> }) {
   const { salonId } = await params;
@@ -10,7 +10,7 @@ export default async function SalonDashboardPage({ params }: { params: Promise<{
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Today</h1>
+      <h1 className={`${fraunces.className} mb-6 text-2xl font-semibold text-stone-900`}>Today</h1>
 
       <RunningStatusWidget salonId={salonId} current={salon.runningStatus} />
 
@@ -22,19 +22,17 @@ export default async function SalonDashboardPage({ params }: { params: Promise<{
         <StatCard label="No-shows" value={counts.noShow} />
       </div>
 
-      <h2 className="mb-3 mt-8 text-lg font-semibold">Next Appointment</h2>
+      <h2 className={`${fraunces.className} mb-3 mt-8 text-lg font-semibold text-stone-900`}>Next Appointment</h2>
       {nextAppointment ? (
-        <Card>
-          <CardContent className="p-4">
-            <p className="font-medium">{nextAppointment.barber.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {nextAppointment.serviceNameSnapshot} · {formatTime(nextAppointment.startAt, salon.timezone)}
-            </p>
-            <p className="text-sm text-muted-foreground">Customer: {nextAppointment.guestName}</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+          <p className="font-medium text-stone-900">{nextAppointment.barber.name}</p>
+          <p className="text-sm text-stone-500">
+            {nextAppointment.serviceNameSnapshot} · {formatTime(nextAppointment.startAt, salon.timezone)}
+          </p>
+          <p className="text-sm text-stone-500">Customer: {nextAppointment.guestName}</p>
+        </div>
       ) : (
-        <p className="text-sm text-muted-foreground">No upcoming appointments today.</p>
+        <p className="text-sm text-stone-500">No upcoming appointments today.</p>
       )}
     </div>
   );
@@ -42,12 +40,10 @@ export default async function SalonDashboardPage({ params }: { params: Promise<{
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card>
-      <CardContent className="p-4 text-center">
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-stone-100 bg-white p-4 text-center shadow-sm">
+      <p className={`${fraunces.className} text-2xl font-bold text-stone-900`}>{value}</p>
+      <p className="text-xs text-stone-500">{label}</p>
+    </div>
   );
 }
 
